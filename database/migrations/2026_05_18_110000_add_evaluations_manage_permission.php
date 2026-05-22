@@ -14,13 +14,23 @@ return new class extends Migration
             'guard_name' => 'web',
         ]);
 
-        $superAdmin = Role::findByName(RolePermissionSeeder::ROLE_SUPER_ADMIN, 'web');
-        $superAdmin?->givePermissionTo($permission);
+        $superAdmin = Role::firstOrCreate([
+            'name'       => RolePermissionSeeder::ROLE_SUPER_ADMIN,
+            'guard_name' => 'web',
+        ]);
+
+        if (! $superAdmin->hasPermissionTo($permission)) {
+            $superAdmin->givePermissionTo($permission);
+        }
     }
 
     public function down(): void
     {
-        $permission = Permission::findByName('evaluations.manage', 'web');
+        $permission = Permission::query()
+            ->where('name', 'evaluations.manage')
+            ->where('guard_name', 'web')
+            ->first();
+
         $permission?->delete();
     }
 };
