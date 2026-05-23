@@ -80,6 +80,9 @@
         @endcanany
 
         @role('Super Admin')
+            <a class="nav-link {{ request()->routeIs('super-admins.*') ? 'active' : '' }}" href="{{ route('super-admins.index') }}">
+                <i class="bi bi-shield-lock"></i> Super Admins
+            </a>
             <a class="nav-link {{ request()->routeIs('master-data.*') ? 'active' : '' }}" href="{{ route('master-data.index') }}">
                 <i class="bi bi-database-gear"></i> Master Data CSV
             </a>

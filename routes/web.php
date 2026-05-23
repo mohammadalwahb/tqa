@@ -20,6 +20,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StaffLookupOptionController;
 use App\Http\Controllers\StaffMemberController;
 use App\Http\Controllers\StaffStatusController;
+use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -88,6 +89,13 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // Coordinators
     Route::middleware('permission:coordinators.manage')->group(function () {
         Route::resource('coordinators', CoordinatorController::class)->except(['show']);
+    });
+
+    // Super Admins (manage who has full system access)
+    Route::middleware('role:Super Admin')->group(function () {
+        Route::resource('super-admins', SuperAdminController::class)
+            ->except(['show'])
+            ->parameters(['super-admins' => 'super_admin']);
     });
 
     // Users
