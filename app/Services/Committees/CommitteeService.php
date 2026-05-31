@@ -25,12 +25,12 @@ class CommitteeService
      *
      * Members rules:
      * - Member #1: the Quality College Coordinator (user) - automatically.
-     * - Member #2 & #3: two staff members from the SAME department.
-     * - Member #4: one staff member from ANOTHER department of the same college.
+     * - Member #2: one staff member from the SAME department.
+     * - Member #3: one staff member from ANOTHER department of the same college.
      *
      * @param array{
      *     department_id:int,
-     *     same_department_member_ids:array<int,int>,
+     *     same_department_member_id:int,
      *     other_department_member_id:int,
      *     evaluation_period_id:int,
      *     evaluation_form_id?:int|null,
@@ -49,25 +49,21 @@ class CommitteeService
             throw new RuntimeException('You can only create committees for your own college.');
         }
 
-        $sameDeptIds = array_values(array_unique(array_map('intval', $data['same_department_member_ids'])));
-        if (count($sameDeptIds) !== 2) {
-            throw new RuntimeException('Exactly two same-department members are required.');
-        }
-
+        $sameDeptStaffId  = (int) $data['same_department_member_id'];
         $otherDeptStaffId = (int) $data['other_department_member_id'];
-        if (in_array($otherDeptStaffId, $sameDeptIds, true)) {
-            throw new RuntimeException('The other-department member must not duplicate the same-department members.');
+
+        if ($sameDeptStaffId === $otherDeptStaffId) {
+            throw new RuntimeException('Same-department and other-department members must be different people.');
         }
 
-        $sameDeptStaff = StaffMember::whereIn('id', $sameDeptIds)->get();
-        if ($sameDeptStaff->count() !== 2 || $sameDeptStaff->pluck('department_id')->unique()->count() !== 1
-            || (int) $sameDeptStaff->first()->department_id !== (int) $department->id) {
-            throw new RuntimeException('Both same-department members must belong to the target department.');
+        $sameDeptStaff = StaffMember::findOrFail($sameDeptStaffId);
+        if ((int) $sameDeptStaff->department_id !== (int) $department->id) {
+            throw new RuntimeException('The same-department member must belong to the chosen department.');
         }
 
         $otherDeptStaff = StaffMember::findOrFail($otherDeptStaffId);
         if ($otherDeptStaff->department_id === $department->id) {
-            throw new RuntimeException('The fourth member must be from a different department.');
+            throw new RuntimeException('The other-department member must be from a different department.');
         }
         if ($otherDeptStaff->college_id !== $department->college_id) {
             throw new RuntimeException('The fourth member must be from another department of the same college.');
@@ -103,25 +99,19 @@ class CommitteeService
                 'source_department_id' => null,
             ]);
 
-            foreach ($sameDeptStaff as $staff) {
-                $this->ensureUserForStaff($staff);
-                CommitteeMember::create([
-                    'committee_id'         => $committee->id,
-                    'user_id'              => $staff->user_id,
-                    'staff_member_id'      => $staff->id,
-                    'member_role'          => CommitteeMember::ROLE_SAME_DEPARTMENT_MEMBER,
-                    'source_department_id' => $department->id,
-                ]);
-            }
+            $this->addStaffMemberToCommittee(
+                $committee,
+                $sameDeptStaff,
+                CommitteeMember::ROLE_SAME_DEPARTMENT_MEMBER,
+                $department->id,
+            );
 
-            $this->ensureUserForStaff($otherDeptStaff);
-            CommitteeMember::create([
-                'committee_id'         => $committee->id,
-                'user_id'              => $otherDeptStaff->user_id,
-                'staff_member_id'      => $otherDeptStaff->id,
-                'member_role'          => CommitteeMember::ROLE_OTHER_DEPARTMENT_MEMBER,
-                'source_department_id' => $otherDeptStaff->department_id,
-            ]);
+            $this->addStaffMemberToCommittee(
+                $committee,
+                $otherDeptStaff,
+                CommitteeMember::ROLE_OTHER_DEPARTMENT_MEMBER,
+                $otherDeptStaff->department_id,
+            );
 
             $this->seedLocalEvaluations($committee);
             app(SuperAdminEvaluationAssignmentService::class)->syncForCommittee($committee);

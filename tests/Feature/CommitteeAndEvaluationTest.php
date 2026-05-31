@@ -74,17 +74,17 @@ it('creates a local committee with the right structure', function () {
 
     $committee = $service->createLocalCommittee($this->coordinator, [
         'department_id'              => $this->deptA->id,
-        'same_department_member_ids' => [$this->staffSame1->id, $this->staffSame2->id],
+        'same_department_member_id' => $this->staffSame1->id,
         'other_department_member_id' => $this->staffOther->id,
         'evaluation_period_id'       => $this->period->id,
     ]);
 
     expect($committee->type)->toBe('local')
-        ->and($committee->members)->toHaveCount(4)
+        ->and($committee->members)->toHaveCount(3)
         ->and($committee->department_id)->toBe($this->deptA->id);
 
     expect($committee->members->where('member_role', CommitteeMember::ROLE_QUALITY_COLLEGE_COORDINATOR)->count())->toBe(1);
-    expect($committee->members->where('member_role', CommitteeMember::ROLE_SAME_DEPARTMENT_MEMBER)->count())->toBe(2);
+    expect($committee->members->where('member_role', CommitteeMember::ROLE_SAME_DEPARTMENT_MEMBER)->count())->toBe(1);
     expect($committee->members->where('member_role', CommitteeMember::ROLE_OTHER_DEPARTMENT_MEMBER)->count())->toBe(1);
 
     expect(Evaluation::where('committee_id', $committee->id)->count())->toBeGreaterThan(0);
@@ -95,7 +95,7 @@ it('rejects duplicate same-dept and other-dept member', function () {
 
     expect(fn () => $service->createLocalCommittee($this->coordinator, [
         'department_id'              => $this->deptA->id,
-        'same_department_member_ids' => [$this->staffSame1->id, $this->staffSame2->id],
+        'same_department_member_id' => $this->staffSame1->id,
         'other_department_member_id' => $this->staffSame1->id,
         'evaluation_period_id'       => $this->period->id,
     ]))->toThrow(RuntimeException::class);
@@ -107,7 +107,7 @@ it('rejects wrong-college coordinator', function () {
 
     expect(fn () => $service->createLocalCommittee($other, [
         'department_id'              => $this->deptA->id,
-        'same_department_member_ids' => [$this->staffSame1->id, $this->staffSame2->id],
+        'same_department_member_id' => $this->staffSame1->id,
         'other_department_member_id' => $this->staffOther->id,
         'evaluation_period_id'       => $this->period->id,
     ]))->toThrow(RuntimeException::class);
@@ -117,7 +117,7 @@ it('submits an evaluation and computes average score', function () {
     $service = app(CommitteeService::class);
     $committee = $service->createLocalCommittee($this->coordinator, [
         'department_id'              => $this->deptA->id,
-        'same_department_member_ids' => [$this->staffSame1->id, $this->staffSame2->id],
+        'same_department_member_id' => $this->staffSame1->id,
         'other_department_member_id' => $this->staffOther->id,
         'evaluation_period_id'       => $this->period->id,
     ]);

@@ -17,7 +17,7 @@ Permission for RBAC, and Laravel Socialite for Google OAuth.
   (rating 1–5, text note, number).
 - **Configurable evaluation windows** (`evaluation_periods`).
 - **Local & HD committees** with the exact business rules from the spec:
-  - Local: 1 Quality College Coordinator + 2 same-department + 1 other-department.
+  - Local: 1 Quality College Coordinator + 1 same-department + 1 other-department.
   - HD: one committee per department head — Dean + Quality College Coordinator + same-dept member + college member (any dept).
 - **Per-evaluator submissions** stored separately. Final result for a staff
   member is the **average of all submitted evaluator averages** across rating
@@ -137,7 +137,7 @@ Tests use SQLite in-memory and seed the database before each run.
 5. Admin opens/edits an **Evaluation Period** to define the window.
 6. The Quality College Coordinator logs in (Google) and:
    - Creates one **Local Committee** per department in their college.
-     The system enforces 2 same-dept + 1 other-dept members and adds the
+     The system enforces 1 same-dept + 1 other-dept member and adds the
      coordinator automatically.
    - Creates **HD Committees** for departments whose head needs to be
      evaluated (Dean + Quality College Coord + same-dept + other-dept/college staff).

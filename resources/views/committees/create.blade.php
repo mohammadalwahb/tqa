@@ -70,16 +70,16 @@
                     <div class="card-header"><h6 class="mb-0">Members</h6></div>
                     <div class="card-body">
                         <p class="text-muted small">
-                            Required: 2 members from the chosen department, 1 from another department. You (the coordinator) are added automatically.
+                            Required: 1 member from the chosen department, 1 from another department. You (the coordinator) are added automatically.
                             Type in the box to search by name.
                         </p>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Same-department members <span class="text-danger">*</span></label>
-                                <select name="same_department_member_ids[]" id="localSameDept" class="staff-member-select" multiple required>
+                                <label class="form-label">Same-department member <span class="text-danger">*</span></label>
+                                <select name="same_department_member_id" id="localSameDept" class="staff-member-select" required>
                                     <option disabled value="">— Select department first —</option>
                                 </select>
-                                <small class="text-muted">Select exactly 2 staff members.</small>
+                                <small class="text-muted">One staff member from the chosen department.</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Other-department member <span class="text-danger">*</span></label>

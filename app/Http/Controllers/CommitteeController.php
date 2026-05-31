@@ -82,9 +82,8 @@ class CommitteeController extends Controller
 
         if ($type === 'local') {
             $request->validate([
-                'same_department_member_ids'   => ['required', 'array', 'size:2'],
-                'same_department_member_ids.*' => ['integer', 'exists:staff_members,id'],
-                'other_department_member_id'   => ['required', 'integer', 'exists:staff_members,id'],
+                'same_department_member_id'    => ['required', 'integer', 'exists:staff_members,id'],
+                'other_department_member_id'   => ['required', 'integer', 'exists:staff_members,id', 'different:same_department_member_id'],
             ]);
         } else {
             $request->validate([
@@ -96,7 +95,7 @@ class CommitteeController extends Controller
         try {
             if ($type === 'local') {
                 $committee = $this->committees->createLocalCommittee($request->user(), $request->only(
-                    'department_id', 'same_department_member_ids', 'other_department_member_id',
+                    'department_id', 'same_department_member_id', 'other_department_member_id',
                     'evaluation_period_id', 'evaluation_form_id', 'name'
                 ));
             } else {
