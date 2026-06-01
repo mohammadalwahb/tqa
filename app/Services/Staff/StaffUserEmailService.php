@@ -43,11 +43,7 @@ class StaffUserEmailService
         $email = mb_strtolower(trim($email));
         $canonical = $this->resolveCanonicalUser($staff);
 
-        return User::query()
-            ->where('email', $email)
-            ->whereNull('deleted_at')
-            ->whereNotIn('id', $this->linkedUserIds($staff))
-            ->get()
+        return $this->usersHoldingEmail($email, $this->linkedUserIds($staff))
             ->filter(function (User $user) use ($staff, $canonical): bool {
                 if (! $canonical) {
                     return true;
@@ -70,19 +66,50 @@ class StaffUserEmailService
     }
 
     /**
+     * Remove any user rows (including soft-deleted) blocking $email for a new staff login.
+     */
+    public function releaseEmailForStaffAccount(string $email, StaffMember $staff): void
+    {
+        $email = mb_strtolower(trim($email));
+
+        foreach ($this->usersHoldingEmail($email, []) as $holder) {
+            if ($holder->isSuperAdmin()) {
+                throw new RuntimeException(__('messages.staff_user_email_conflict'));
+            }
+
+            if ($holder->staff_member_id !== null
+                && (int) $holder->staff_member_id !== (int) $staff->id) {
+                throw new RuntimeException(__('messages.staff_user_email_conflict'));
+            }
+
+            if ($holder->trashed() || $holder->staff_member_id === null) {
+                $holder->forceDelete();
+
+                continue;
+            }
+
+            throw new RuntimeException(__('messages.staff_user_email_conflict'));
+        }
+    }
+
+    /**
      * Assign $email to the canonical user, merging stray accounts that belong to the same staff.
      */
     public function reclaimEmailForLinkedUser(User $canonicalUser, StaffMember $staff, string $email): void
     {
         $email = mb_strtolower(trim($email));
 
-        $duplicates = User::query()
-            ->where('email', $email)
-            ->where('id', '!=', $canonicalUser->id)
-            ->whereNull('deleted_at')
-            ->get();
+        foreach ($this->usersHoldingEmail($email, [$canonicalUser->id]) as $duplicate) {
+            if ($duplicate->trashed()) {
+                if ($this->trashedHolderMayBeRemoved($duplicate, $staff)) {
+                    $duplicate->forceDelete();
 
-        foreach ($duplicates as $duplicate) {
+                    continue;
+                }
+
+                throw new RuntimeException(__('messages.staff_user_email_conflict'));
+            }
+
             if (! $this->duplicateMayBeReclaimed($duplicate, $staff, $canonicalUser)) {
                 throw new RuntimeException(__('messages.staff_user_email_conflict'));
             }
@@ -97,16 +124,42 @@ class StaffUserEmailService
             return false;
         }
 
-        if ((int) $duplicate->staff_member_id === (int) $staff->id) {
-            return true;
-        }
-
-        if ($duplicate->staff_member_id !== null) {
+        if ($duplicate->staff_member_id !== null
+            && (int) $duplicate->staff_member_id !== (int) $staff->id) {
             return false;
         }
 
-        return (int) $canonicalUser->staff_member_id === (int) $staff->id
-            || (int) $staff->user_id === (int) $canonicalUser->id;
+        return (int) $duplicate->staff_member_id === (int) $staff->id
+            || (int) $staff->user_id === (int) $canonicalUser->id
+            || (int) $canonicalUser->staff_member_id === (int) $staff->id;
+    }
+
+    private function trashedHolderMayBeRemoved(User $user, StaffMember $staff): bool
+    {
+        if ($user->isSuperAdmin()) {
+            return false;
+        }
+
+        if ($user->staff_member_id !== null
+            && (int) $user->staff_member_id !== (int) $staff->id) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  array<int, int>  $exceptUserIds
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    private function usersHoldingEmail(string $email, array $exceptUserIds): \Illuminate\Support\Collection
+    {
+        $email = mb_strtolower(trim($email));
+
+        return User::withTrashed()
+            ->where('email', $email)
+            ->whereNotIn('id', $exceptUserIds)
+            ->get();
     }
 
     private function mergeDuplicateIntoCanonical(User $canonical, User $duplicate): void

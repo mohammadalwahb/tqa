@@ -78,6 +78,39 @@ it('allows reverting staff email when an orphan user still holds the old address
         ->and((int) $staff->user_id)->toBe((int) $linkedUser->id);
 });
 
+it('clears soft-deleted user holding target email before updating linked account', function () {
+    $staff = StaffMember::create([
+        'full_name_en' => 'Ziyad Staff',
+        'email' => 'ziyad@uoz.edu.krd',
+        'college_id' => $this->department->college_id,
+        'department_id' => $this->department->id,
+        'is_active' => true,
+    ]);
+
+    $linked = User::create([
+        'name' => 'Ziyad Staff',
+        'email' => 'ziyad@uoz.edu.krd',
+        'password' => bcrypt('secret'),
+        'staff_member_id' => $staff->id,
+        'is_active' => true,
+    ]);
+    $staff->update(['user_id' => $linked->id]);
+
+    $ghost = User::create([
+        'name' => 'Old Media Login',
+        'email' => 'media.editing@uoz.edu.krd',
+        'password' => bcrypt('secret'),
+        'is_active' => true,
+    ]);
+    $ghost->delete();
+
+    $staff->update(['email' => 'media.editing@uoz.edu.krd']);
+    app(CommitteeService::class)->ensureUserForStaff($staff->fresh());
+
+    expect($linked->fresh()->email)->toBe('media.editing@uoz.edu.krd')
+        ->and(User::withTrashed()->where('email', 'media.editing@uoz.edu.krd')->count())->toBe(1);
+});
+
 it('reclaims duplicate user on ensureUserForStaff when syncing email', function () {
     $staff = StaffMember::create([
         'full_name_en' => 'Head',

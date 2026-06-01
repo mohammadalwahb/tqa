@@ -405,6 +405,9 @@ class CommitteeService
         }
 
         if (! $user) {
+            app(\App\Services\Staff\StaffUserEmailService::class)
+                ->releaseEmailForStaffAccount(mb_strtolower(trim($staff->email)), $staff);
+
             $user = User::create([
                 'name'      => $staff->full_name_en,
                 'email'     => $staff->email,
