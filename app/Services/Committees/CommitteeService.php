@@ -390,9 +390,19 @@ class CommitteeService
             return null;
         }
 
-        $user = $staff->user_id
-            ? User::find($staff->user_id)
-            : User::where('email', $staff->email)->first();
+        $user = null;
+        if ($staff->user_id) {
+            $user = User::withTrashed()->find($staff->user_id);
+        }
+        if (! $user) {
+            $user = User::query()
+                ->where('email', mb_strtolower(trim($staff->email)))
+                ->whereNull('deleted_at')
+                ->first();
+        }
+        if ($user?->trashed()) {
+            $user->restore();
+        }
 
         if (! $user) {
             $user = User::create([
@@ -424,14 +434,8 @@ class CommitteeService
         $email = mb_strtolower(trim($staff->email));
 
         if (mb_strtolower($user->email) !== $email) {
-            $conflict = User::query()
-                ->where('email', $email)
-                ->where('id', '!=', $user->id)
-                ->exists();
-
-            if ($conflict) {
-                throw new RuntimeException(__('messages.staff_user_email_conflict'));
-            }
+            app(\App\Services\Staff\StaffUserEmailService::class)
+                ->reclaimEmailForLinkedUser($user, $staff, $email);
 
             $user->email = $email;
         }

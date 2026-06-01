@@ -9,6 +9,7 @@ namespace App\Http\Requests;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Services\Staff\StaffAttributeValidator;
+use App\Services\Staff\StaffUserEmailService;
 
 use App\Support\Utf8Helper;
 
@@ -70,23 +71,21 @@ class StaffMemberRequest extends FormRequest
 
 
 
+        $staff = $this->routeStaff();
+
+        $emailRules = [
+            'required', 'email', 'max:191', $endsWith,
+            Rule::unique('staff_members', 'email')->ignore($staffId)->whereNull('deleted_at'),
+            $this->userEmailAvailabilityRule($staff),
+        ];
+
         $rules = array_merge([
 
             'full_name_en'      => ['required', 'string', 'max:255'],
 
             'full_name_ku'      => ['nullable', 'string', 'max:255'],
 
-            'email'             => [
-
-                'required', 'email', 'max:191', $endsWith,
-
-                Rule::unique('staff_members', 'email')->ignore($staffId)->whereNull('deleted_at'),
-
-                Rule::unique('users', 'email')->ignore(
-                    $staffId ? StaffMember::find($staffId)?->user_id : null
-                ),
-
-            ],
+            'email'             => $emailRules,
 
             'gender'            => ['nullable', 'in:male,female'],
 
@@ -188,6 +187,38 @@ class StaffMemberRequest extends FormRequest
 
         return $staff instanceof StaffMember ? $staff : null;
 
+    }
+
+    private function userEmailAvailabilityRule(?StaffMember $staff): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail) use ($staff): void {
+            $email = mb_strtolower(trim((string) $value));
+            $resolver = app(StaffUserEmailService::class);
+
+            if ($staff) {
+                if ($resolver->emailTakenByAnotherAccount($email, $staff)) {
+                    $fail(__('validation.unique', ['attribute' => 'email']));
+                }
+
+                return;
+            }
+
+            $user = User::query()->where('email', $email)->whereNull('deleted_at')->first();
+
+            if (! $user) {
+                return;
+            }
+
+            if ($user->isSuperAdmin()) {
+                $fail(__('validation.unique', ['attribute' => 'email']));
+
+                return;
+            }
+
+            if ($user->staff_member_id && StaffMember::query()->whereKey($user->staff_member_id)->exists()) {
+                $fail(__('validation.unique', ['attribute' => 'email']));
+            }
+        };
     }
 
 }
