@@ -282,12 +282,10 @@ class CommitteeService
      */
     private function seedLocalEvaluations(Committee $committee): void
     {
-        $staffToEvaluate = StaffMember::where('department_id', $committee->department_id)
-            ->where('is_active', true)
-            ->where('is_teaching_staff', true)
-            ->get();
-
-        $this->seedEvaluations($committee, $staffToEvaluate);
+        $this->seedEvaluations(
+            $committee,
+            LocalCommitteeEvaluateeResolver::forDepartment((int) $committee->department_id),
+        );
     }
 
     /**

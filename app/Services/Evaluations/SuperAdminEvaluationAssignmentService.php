@@ -5,6 +5,7 @@ namespace App\Services\Evaluations;
 use App\Models\Committee;
 use App\Models\Department;
 use App\Models\Evaluation;
+use App\Services\Committees\LocalCommitteeEvaluateeResolver;
 use App\Models\EvaluationForm;
 use App\Models\StaffMember;
 use App\Models\User;
@@ -255,11 +256,7 @@ class SuperAdminEvaluationAssignmentService
             return $head ? collect([$head]) : collect();
         }
 
-        return StaffMember::query()
-            ->where('department_id', $committee->department_id)
-            ->where('is_active', true)
-            ->where('is_teaching_staff', true)
-            ->get();
+        return LocalCommitteeEvaluateeResolver::forDepartment((int) $committee->department_id);
     }
 
     private function staffIsEvaluateeOnCommittee(Committee $committee, StaffMember $staff): bool
@@ -268,6 +265,10 @@ class SuperAdminEvaluationAssignmentService
             $department = Department::find($committee->department_id);
 
             return $department && (int) $department->head_staff_id === (int) $staff->id && $staff->is_active;
+        }
+
+        if (LocalCommitteeEvaluateeResolver::isExcluded($staff, (int) $committee->department_id)) {
+            return false;
         }
 
         return $staff->is_teaching_staff

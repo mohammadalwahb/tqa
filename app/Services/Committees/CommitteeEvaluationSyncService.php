@@ -49,6 +49,10 @@ class CommitteeEvaluationSyncService
             return 0;
         }
 
+        if (LocalCommitteeEvaluateeResolver::isExcluded($staff, (int) $committee->department_id)) {
+            return 0;
+        }
+
         $evaluators = $committee->members()->whereNotNull('user_id')->get();
         $created    = 0;
 

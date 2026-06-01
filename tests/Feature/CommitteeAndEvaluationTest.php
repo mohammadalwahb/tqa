@@ -99,6 +99,11 @@ it('creates a local committee with the right structure', function () {
     expect($committee->members->where('member_role', CommitteeMember::ROLE_OTHER_DEPARTMENT_MEMBER)->count())->toBe(1);
 
     expect(Evaluation::where('committee_id', $committee->id)->count())->toBeGreaterThan(0);
+
+    expect(Evaluation::query()
+        ->where('committee_id', $committee->id)
+        ->where('evaluatee_staff_id', $this->deptHead->id)
+        ->exists())->toBeFalse();
 });
 
 it('rejects duplicate same-dept and other-dept member', function () {
