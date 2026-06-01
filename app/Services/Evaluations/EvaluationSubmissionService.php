@@ -56,7 +56,7 @@ class EvaluationSubmissionService
 
         $questions = $questions->keyBy('id');
 
-        DB::transaction(function () use ($evaluation, $answers, $questions, $finalize) {
+        DB::transaction(function () use ($evaluation, $answers, $questions, $finalize, $adminOverride) {
             $ratingTotal = 0;
             $ratingCount = 0;
 
