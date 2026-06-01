@@ -36,7 +36,14 @@
             </a>
         @endcan
 
-        @canany(['colleges.manage','departments.manage','staff.manage','viewAny,App\Models\StaffMember','staff_options.manage','staff_status.manage'])
+        @if(auth()->user()?->can('staff.manage_department') && !auth()->user()?->can('staff.manage'))
+            <div class="nav-section">{{ __('nav.my_department') }}</div>
+            <a class="nav-link {{ request()->routeIs('staff.*') ? 'active' : '' }}" href="{{ route('staff.index') }}">
+                <i class="bi bi-person-vcard"></i> {{ __('nav.department_staff') }}
+            </a>
+        @endif
+
+        @canany(['colleges.manage','departments.manage','staff.manage','staff.manage_department','viewAny,App\Models\StaffMember','staff_options.manage','staff_status.manage'])
             <div class="nav-section">{{ __('nav.organization') }}</div>
             @can('colleges.manage')
                 <a class="nav-link {{ request()->routeIs('colleges.*') ? 'active' : '' }}" href="{{ route('colleges.index') }}">
@@ -48,11 +55,11 @@
                     <i class="bi bi-diagram-3"></i> {{ __('nav.departments') }}
                 </a>
             @endcan
-            @canany(['staff.manage', 'viewAny,App\Models\StaffMember'])
+            @can('staff.manage')
                 <a class="nav-link {{ request()->routeIs('staff.*') ? 'active' : '' }}" href="{{ route('staff.index') }}">
                     <i class="bi bi-person-vcard"></i> {{ __('nav.staff') }}
                 </a>
-            @endcanany
+            @endcan
             @canany(['staff_options.manage', 'staff_status.manage'])
                 <a class="nav-link {{ request()->routeIs('staff-options.*', 'staff-statuses.*') ? 'active' : '' }}" href="{{ route('staff-options.index') }}">
                     <i class="bi bi-list-check"></i> {{ __('nav.staff_options') }}

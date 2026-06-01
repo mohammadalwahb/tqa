@@ -65,9 +65,16 @@ class CommitteeEvaluationSyncService
      *
      * @return array{created: int, removed: int}
      */
-    public function reconcileLocalEvaluationsForStaff(StaffMember $staff): array
+    public function reconcileLocalEvaluationsForStaff(StaffMember $staff, ?int $previousDepartmentId = null): array
     {
-        $removed = $this->removeStaffFromLocalCommitteeEvaluations($staff);
+        $removed = 0;
+
+        if ($previousDepartmentId !== null
+            && (int) $previousDepartmentId !== (int) $staff->department_id) {
+            $removed += $this->removeStaffFromDepartmentCommitteeEvaluations($staff, $previousDepartmentId);
+        }
+
+        $removed += $this->removeStaffFromLocalCommitteeEvaluations($staff);
 
         $created = 0;
         if ($this->shouldBeLocalEvaluatee($staff)) {
@@ -75,6 +82,24 @@ class CommitteeEvaluationSyncService
         }
 
         return ['created' => $created, 'removed' => $removed];
+    }
+
+    public function removeStaffFromDepartmentCommitteeEvaluations(StaffMember $staff, int $departmentId): int
+    {
+        $committeeIds = Committee::query()
+            ->where('type', Committee::TYPE_LOCAL)
+            ->where('department_id', $departmentId)
+            ->where('is_active', true)
+            ->pluck('id');
+
+        if ($committeeIds->isEmpty()) {
+            return 0;
+        }
+
+        return Evaluation::query()
+            ->where('evaluatee_staff_id', $staff->id)
+            ->whereIn('committee_id', $committeeIds)
+            ->delete();
     }
 
     /**

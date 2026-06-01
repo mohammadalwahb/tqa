@@ -6,7 +6,9 @@
 <div class="card table-card">
     <div class="card-header">
         <h5 class="mb-0">{{ \App\Support\LocaleHelper::staffDisplayName($staff) }}</h5>
-        <a href="{{ route('staff.edit', $staff) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> {{ __('common.edit') }}</a>
+        @can('update', $staff)
+            <a href="{{ route('staff.edit', $staff) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i> {{ __('common.edit') }}</a>
+        @endcan
     </div>
     <div class="card-body">
         <dl class="row">

@@ -25,6 +25,7 @@ class RolePermissionSeeder extends Seeder
             'colleges.manage',
             'departments.manage',
             'staff.manage',
+            'staff.manage_department',
             'staff.import',
             'staff_status.manage',
             'staff_options.manage',
@@ -82,6 +83,7 @@ class RolePermissionSeeder extends Seeder
 
         $departmentHead = Role::firstOrCreate(['name' => self::ROLE_DEPARTMENT_HEAD, 'guard_name' => 'web']);
         $departmentHead->syncPermissions([
+            'staff.manage_department',
             'evaluations.view_own',
         ]);
     }

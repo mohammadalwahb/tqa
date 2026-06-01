@@ -122,6 +122,8 @@ class StaffMemberController extends Controller
 
     ): RedirectResponse {
 
+        $this->authorize('create', StaffMember::class);
+
         $staff = StaffMember::create($request->validated());
 
         $this->syncOrganizationalRoles($orgRoles, $staff);
@@ -186,13 +188,17 @@ class StaffMemberController extends Controller
 
     ): RedirectResponse {
 
+        $this->authorize('update', $staff);
+
+        $previousDepartmentId = (int) $staff->department_id;
+
         $staff->update($request->validated());
 
         $this->syncOrganizationalRoles($orgRoles, $staff->fresh());
 
         app(\App\Services\Committees\CommitteeService::class)->ensureUserForStaff($staff->fresh());
 
-        $syncResult = $committeeSync->reconcileLocalEvaluationsForStaff($staff->fresh());
+        $syncResult = $committeeSync->reconcileLocalEvaluationsForStaff($staff->fresh(), $previousDepartmentId);
 
         $message = __('messages.staff_updated');
 
@@ -437,7 +443,7 @@ class StaffMemberController extends Controller
 
         return $user
 
-            && $user->headedDepartment() !== null
+            && $user->can('staff.manage_department')
 
             && ! $user->can('staff.manage');
 
