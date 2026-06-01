@@ -401,6 +401,8 @@ class CommitteeService
                 'password'  => Hash::make(Str::random(40)),
                 'is_active' => true,
             ]);
+        } else {
+            $this->syncLinkedUserFromStaff($user, $staff);
         }
 
         if ($user->staff_member_id !== $staff->id) {
@@ -415,5 +417,29 @@ class CommitteeService
         app(UserAccessSyncService::class)->sync($user);
 
         return $user;
+    }
+
+    private function syncLinkedUserFromStaff(User $user, StaffMember $staff): void
+    {
+        $email = mb_strtolower(trim($staff->email));
+
+        if (mb_strtolower($user->email) !== $email) {
+            $conflict = User::query()
+                ->where('email', $email)
+                ->where('id', '!=', $user->id)
+                ->exists();
+
+            if ($conflict) {
+                throw new RuntimeException(__('messages.staff_user_email_conflict'));
+            }
+
+            $user->email = $email;
+        }
+
+        if ($user->name !== $staff->full_name_en) {
+            $user->name = $staff->full_name_en;
+        }
+
+        $user->save();
     }
 }

@@ -531,6 +531,7 @@
     "messages.committee_hd_exists": "An HD committee already exists for this department in this period.",
     "messages.committee_staff_missing": "A committee staff member record is missing.",
     "messages.committee_user_create_failed": "Could not create a user account for :name.",
+    "messages.staff_user_email_conflict": "This email is already used by another user account. Choose a different email or contact the administrator.",
 
     "messages.evaluation_period_closed": "The evaluation period is closed.",
     "messages.evaluation_locked": "This evaluation has already been submitted.",

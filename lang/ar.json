@@ -531,6 +531,7 @@
     "messages.committee_hd_exists": "توجد لجنة HD بالفعل لهذا القسم في هذه الفترة.",
     "messages.committee_staff_missing": "سجل عضو هيئة التدريس في اللجنة مفقود.",
     "messages.committee_user_create_failed": "تعذّر إنشاء حساب مستخدم لـ :name.",
+    "messages.staff_user_email_conflict": "هذا البريد الإلكتروني مستخدم بالفعل في حساب مستخدم آخر.",
     "messages.evaluation_period_closed": "فترة التقييم مغلقة.",
     "messages.evaluation_locked": "تم إرسال هذا التقييم بالفعل.",
     "messages.evaluation_admin_no_resubmit": "لا يمكن للمسؤولين إعادة إرسال التقييمات. احفظ التغييرات بدلاً من ذلك.",

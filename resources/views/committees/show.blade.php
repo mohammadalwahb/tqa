@@ -30,7 +30,7 @@
                         <div class="d-flex justify-content-between">
                             <div>
                                 <strong>{{ $m->displayName() }}</strong><br>
-                                <small class="text-muted">{{ $m->user?->email ?? $m->staffMember?->email }}</small>
+                                <small class="text-muted">{{ $m->displayEmail() }}</small>
                             </div>
                             <span class="badge bg-secondary-subtle text-secondary-emphasis">
                                 {{ str_replace('_', ' ', ucfirst($m->member_role)) }}

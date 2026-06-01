@@ -55,6 +55,12 @@ class CommitteeMember extends Model
         if ($this->user) {
             return $this->user->name;
         }
+
         return 'Unknown';
+    }
+
+    public function displayEmail(): ?string
+    {
+        return $this->staffMember?->email ?? $this->user?->email;
     }
 }

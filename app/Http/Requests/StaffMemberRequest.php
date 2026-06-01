@@ -7,7 +7,7 @@ namespace App\Http\Requests;
 
 
 use App\Models\StaffMember;
-
+use App\Models\User;
 use App\Services\Staff\StaffAttributeValidator;
 
 use App\Support\Utf8Helper;
@@ -81,6 +81,10 @@ class StaffMemberRequest extends FormRequest
                 'required', 'email', 'max:191', $endsWith,
 
                 Rule::unique('staff_members', 'email')->ignore($staffId)->whereNull('deleted_at'),
+
+                Rule::unique('users', 'email')->ignore(
+                    $staffId ? StaffMember::find($staffId)?->user_id : null
+                ),
 
             ],
 

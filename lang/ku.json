@@ -530,6 +530,7 @@
     "messages.committee_hd_exists": "کۆمیتەیەکی HD پێشتر بۆ ئەم بەشە لەم ماوەیەدا هەیە.",
     "messages.committee_staff_missing": "تۆماری ستافی ئەندامی کۆمیتە ونە.",
     "messages.committee_user_create_failed": "نەتوانرا هەژماری بەکارهێنەر دروست بکرێت بۆ :name.",
+    "messages.staff_user_email_conflict": "ئەم ئیمەیڵە پێشتر لە هەژمارێکی تری بەکارهێنەردا بەکارهاتووە.",
     "messages.evaluation_period_closed": "ماوەی هەڵسەنگاندن داخراوە.",
     "messages.evaluation_locked": "ئەم هەڵسەنگاندنە پێشتر نێردراوە.",
     "messages.evaluation_admin_no_resubmit": "بەڕێوەبەران ناتوانن هەڵسەنگاندن دووبارە بنێرن. گۆڕانکاریەکان پاشەکەوت بکە.",

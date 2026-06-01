@@ -117,6 +117,28 @@ it('removes evaluations when teaching staff is deactivated', function () {
             ->count())->toBe(0);
 });
 
+it('syncs linked user email when staff email is updated before committee creation', function () {
+    $this->deptHead->update(['email' => 'head-new@uoz.edu.krd']);
+    app(\App\Services\Committees\CommitteeService::class)->ensureUserForStaff($this->deptHead->fresh());
+
+    expect($this->deptHead->fresh()->user?->email)->toBe('head-new@uoz.edu.krd');
+
+    $committee = $this->service->createLocalCommittee($this->coordinator, [
+        'department_id' => $this->deptA->id,
+        'same_department_member_id' => $this->same->id,
+        'other_department_member_id' => $this->other->id,
+        'evaluation_period_id' => $this->period->id,
+    ]);
+
+    $headMember = $committee->members->firstWhere(
+        'member_role',
+        \App\Models\CommitteeMember::ROLE_HEAD_OF_DEPARTMENT
+    );
+
+    expect($headMember)->not->toBeNull()
+        ->and($headMember->displayEmail())->toBe('head-new@uoz.edu.krd');
+});
+
 it('does not create local evaluations for the department head', function () {
     $committee = $this->service->createLocalCommittee($this->coordinator, [
         'department_id' => $this->deptA->id,
