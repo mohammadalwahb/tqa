@@ -38,8 +38,8 @@ class CoordinatorController extends Controller
         $user->syncRoles([RolePermissionSeeder::ROLE_QUALITY_COORDINATOR]);
 
         $message = $result['restored']
-            ? 'This user was previously removed and has been restored as a Quality College Coordinator. They can sign in via Google.'
-            : 'Quality College Coordinator created. They can sign in via Google.';
+            ? __('messages.coordinator_restored')
+            : __('messages.coordinator_created');
 
         return redirect()->route('coordinators.index')->with('success', $message);
     }
@@ -59,7 +59,7 @@ class CoordinatorController extends Controller
             $coordinator->assignRole(RolePermissionSeeder::ROLE_QUALITY_COORDINATOR);
         }
 
-        return redirect()->route('coordinators.index')->with('success', 'Coordinator updated.');
+        return redirect()->route('coordinators.index')->with('success', __('messages.coordinator_updated'));
     }
 
     public function destroy(User $coordinator): RedirectResponse
@@ -68,6 +68,6 @@ class CoordinatorController extends Controller
         $coordinator->college_id = null;
         $coordinator->save();
 
-        return redirect()->route('coordinators.index')->with('success', 'Coordinator role removed.');
+        return redirect()->route('coordinators.index')->with('success', __('messages.coordinator_removed'));
     }
 }

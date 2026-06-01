@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>TQA Report</title>
+    <title>{{ __('reports.pdf_title') }}</title>
     <style>
         * { font-family: DejaVu Sans, sans-serif; }
         body { font-size: 11px; color: #1f2937; }
@@ -20,26 +20,30 @@
     </style>
 </head>
 <body>
-    <h1>Teaching Quality Assessment Report</h1>
+    <h1>{{ __('reports.pdf_title') }}</h1>
     <div class="meta">
-        Period: <strong>{{ $period->name }}</strong>
+        {{ __('reports.period_label') }} <strong>{{ $period->name }}</strong>
         ({{ $period->start_date->toDateString() }} → {{ $period->end_date->toDateString() }})<br>
-        Generated: {{ now()->toDateTimeString() }}
+        {{ __('reports.generated') }} {{ now()->toDateTimeString() }}
     </div>
 
-    <h2>University Evaluation Completion</h2>
+    <h2>{{ __('reports.university_completion') }}</h2>
     <div>{{ $progress['completed'] }} / {{ $progress['required'] }} ({{ $progress['percentage'] }}%)</div>
     <div class="progress" style="margin-top:4px;">
         <div class="bar" style="width: {{ $progress['percentage'] }}%;"></div>
     </div>
 
-    <h2>Per-Staff Completion</h2>
+    <h2>{{ __('reports.per_staff_completion') }}</h2>
     <table>
         <thead>
             <tr>
-                <th>Staff</th><th>Department</th><th>College</th>
-                <th class="right">Required</th><th class="right">Completed</th>
-                <th class="right">Completion %</th><th class="right">Avg Score</th>
+                <th>{{ __('nav.staff') }}</th>
+                <th>{{ __('common.department') }}</th>
+                <th>{{ __('common.college') }}</th>
+                <th class="right">{{ __('reports.required') }}</th>
+                <th class="right">{{ __('reports.completed') }}</th>
+                <th class="right">{{ __('reports.completion_pct') }}</th>
+                <th class="right">{{ __('reports.avg_score') }}</th>
                 @foreach($reportQuestionColumns as $questionCol)
                     <th class="right">{{ \Illuminate\Support\Str::limit($questionCol->text, 28) }}</th>
                 @endforeach
@@ -52,11 +56,11 @@
             @foreach($staffRows as $row)
                 <tr>
                     <td>
-                        <strong>{{ $row['staff']->full_name_en }}</strong><br>
+                        <strong>{{ \App\Support\LocaleHelper::staffDisplayName($row['staff']) }}</strong><br>
                         <small>{{ $row['staff']->email }}</small>
                     </td>
-                    <td>{{ $row['staff']->department?->name_en }}</td>
-                    <td>{{ $row['staff']->department?->college?->name_en }}</td>
+                    <td>{{ \App\Support\LocaleHelper::departmentDisplayName($row['staff']->department) }}</td>
+                    <td>{{ \App\Support\LocaleHelper::collegeDisplayName($row['staff']->department?->college) }}</td>
                     <td class="right">{{ $row['required'] }}</td>
                     <td class="right">{{ $row['completed'] }}</td>
                     <td class="right">{{ $row['percentage'] }}%</td>

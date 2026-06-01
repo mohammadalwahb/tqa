@@ -37,8 +37,8 @@ class SuperAdminController extends Controller
         $user->syncRoles([RolePermissionSeeder::ROLE_SUPER_ADMIN]);
 
         $message = $result['restored']
-            ? 'This user was previously removed and has been restored as a Super Admin. They can sign in via Google.'
-            : 'Super Admin created. They can sign in via Google.';
+            ? __('messages.super_admin_restored')
+            : __('messages.super_admin_created');
 
         return redirect()->route('super-admins.index')->with('success', $message);
     }
@@ -62,7 +62,7 @@ class SuperAdminController extends Controller
             $super_admin->assignRole(RolePermissionSeeder::ROLE_SUPER_ADMIN);
         }
 
-        return redirect()->route('super-admins.index')->with('success', 'Super Admin updated.');
+        return redirect()->route('super-admins.index')->with('success', __('messages.super_admin_updated'));
     }
 
     public function destroy(User $super_admin): RedirectResponse
@@ -71,17 +71,17 @@ class SuperAdminController extends Controller
 
         if ((int) $super_admin->id === (int) auth()->id()) {
             return redirect()->route('super-admins.index')
-                ->with('error', 'You cannot remove your own Super Admin access.');
+                ->with('error', __('messages.super_admin_cannot_remove_self'));
         }
 
         if (User::role(RolePermissionSeeder::ROLE_SUPER_ADMIN)->count() <= 1) {
             return redirect()->route('super-admins.index')
-                ->with('error', 'At least one Super Admin must remain.');
+                ->with('error', __('messages.super_admin_min_one'));
         }
 
         $super_admin->removeRole(RolePermissionSeeder::ROLE_SUPER_ADMIN);
 
-        return redirect()->route('super-admins.index')->with('success', 'Super Admin role removed.');
+        return redirect()->route('super-admins.index')->with('success', __('messages.super_admin_removed'));
     }
 
     private function ensureSuperAdmin(User $user): void

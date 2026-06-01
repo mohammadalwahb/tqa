@@ -1,32 +1,29 @@
 <div class="card table-card mb-3">
-    <div class="card-header"><h6 class="mb-0">Derived metrics</h6></div>
+    <div class="card-header"><h6 class="mb-0">{{ __('forms.derived_metrics') }}</h6></div>
     <div class="card-body">
-        <p class="small text-muted mb-3">
-            Combine question values, assign a custom name, optional letter grades, and choose whether each metric appears on staff reports.
-            Enable <strong>Grade by academic title</strong> to define grade bands per academic title (matched to each staff member's title).
-        </p>
+        <p class="small text-muted mb-3">{{ __('forms.derived_metrics_intro') }}</p>
 
         <div class="border rounded p-3 mb-3 bg-light">
-            <h6 class="small fw-semibold mb-2">Add derived metric</h6>
+            <h6 class="small fw-semibold mb-2">{{ __('forms.add_derived_metric') }}</h6>
             <form method="POST" action="{{ route('forms.score-metrics.store', $form) }}" id="newMetricForm" class="metric-form">
                 @csrf
                 <div class="mb-2">
-                    <label class="form-label small mb-1">Name</label>
-                    <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Publications score" required>
+                    <label class="form-label small mb-1">{{ __('common.name') }}</label>
+                    <input type="text" name="name" class="form-control form-control-sm" placeholder="{{ __('forms.metric_name_placeholder') }}" required>
                 </div>
                 <div class="row g-2 mb-2">
                     <div class="col-6">
-                        <label class="form-label small mb-1">Calculation</label>
+                        <label class="form-label small mb-1">{{ __('forms.calculation') }}</label>
                         <select name="operation" class="form-select form-select-sm">
-                            <option value="sum">Sum of question averages</option>
-                            <option value="average">Average of question averages</option>
+                            <option value="sum">{{ \App\Support\LocaleHelper::enum('metric_calc', 'sum_avg') }}</option>
+                            <option value="average">{{ \App\Support\LocaleHelper::enum('metric_calc', 'avg_avg') }}</option>
                         </select>
                     </div>
                     <div class="col-6 d-flex align-items-end">
                         <div class="form-check form-switch">
                             <input type="hidden" name="show_in_reports" value="0">
                             <input class="form-check-input" type="checkbox" name="show_in_reports" value="1" id="newMetricShowReports" checked>
-                            <label class="form-check-label small" for="newMetricShowReports">Show in reports</label>
+                            <label class="form-check-label small" for="newMetricShowReports">{{ __('forms.show_in_reports') }}</label>
                         </div>
                     </div>
                 </div>
@@ -34,11 +31,11 @@
                 <div class="form-check form-switch mb-2">
                     <input type="hidden" name="grade_by_academic_title" value="0">
                     <input class="form-check-input grade-by-title-toggle" type="checkbox" name="grade_by_academic_title" value="1" id="newMetricGradeByTitle">
-                    <label class="form-check-label small" for="newMetricGradeByTitle">Grade by academic title</label>
+                    <label class="form-check-label small" for="newMetricGradeByTitle">{{ __('forms.grade_by_title') }}</label>
                 </div>
 
                 <div class="title-grade-block" data-title-grades @if(!old('grade_by_academic_title')) style="display:none" @endif>
-                    <label class="form-label small mb-1">Grades per academic title</label>
+                    <label class="form-label small mb-1">{{ __('forms.grades_per_title') }}</label>
                     <div data-title-blocks-container>
                         @if(old('grade_by_academic_title') && old('title_grades'))
                             @foreach(old('title_grades') as $ti => $tg)
@@ -52,23 +49,23 @@
                         @endif
                     </div>
                     <button type="button" class="btn btn-outline-primary btn-sm mb-3 add-title-block">
-                        <i class="bi bi-plus"></i> Add academic title
+                        <i class="bi bi-plus"></i> {{ __('forms.add_academic_title') }}
                     </button>
                 </div>
 
                 <div class="custom-grade-block" data-custom-grades @if(old('grade_by_academic_title')) style="display:none" @endif>
-                    <label class="form-label small mb-1">Letter grade mapping (same for all staff)</label>
+                    <label class="form-label small mb-1">{{ __('forms.letter_grade_mapping') }}</label>
                     <div class="grade-rows mb-2" data-grade-container>
                         @foreach(old('grades', []) as $gi => $g)
                             @include('forms.partials.grade_row', ['index' => $gi, 'grade' => (object) $g])
                         @endforeach
                     </div>
                     <div class="mb-3">
-                        <button type="button" class="btn btn-outline-secondary btn-sm add-grade-row"><i class="bi bi-plus"></i> Add grade</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm add-grade-row"><i class="bi bi-plus"></i> {{ __('forms.add_grade') }}</button>
                     </div>
                 </div>
 
-                <label class="form-label small mb-1">Questions</label>
+                <label class="form-label small mb-1">{{ __('forms.questions_label') }}</label>
                 <div class="mb-2" style="max-height:120px; overflow-y:auto;">
                     @foreach($form->questions->filter(fn ($q) => in_array($q->type, ['rating', 'number'], true)) as $q)
                         <div class="form-check">
@@ -78,7 +75,7 @@
                     @endforeach
                 </div>
 
-                <button class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-calculator"></i> Add metric</button>
+                <button class="btn btn-outline-primary btn-sm w-100"><i class="bi bi-calculator"></i> {{ __('forms.add_metric') }}</button>
             </form>
         </div>
 
@@ -89,18 +86,18 @@
                         <strong>{{ $metric->name }}</strong>
                         <span class="badge bg-light text-muted">{{ $metric->operation }}</span>
                         @unless($metric->show_in_reports)
-                            <span class="badge bg-warning-subtle text-warning-emphasis">Hidden from reports</span>
+                            <span class="badge bg-warning-subtle text-warning-emphasis">{{ __('forms.hidden_from_reports') }}</span>
                         @endunless
                         @if($metric->grade_by_academic_title)
-                            <span class="badge bg-info-subtle text-info-emphasis">By academic title</span>
+                            <span class="badge bg-info-subtle text-info-emphasis">{{ __('forms.by_academic_title') }}</span>
                         @endif
-                        <div class="small text-muted">{{ $metric->questions->count() }} question(s)</div>
+                        <div class="small text-muted">{{ __('forms.questions_count_short', ['count' => $metric->questions->count()]) }}</div>
                     </div>
                     <div class="d-flex gap-1">
                         <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#editMetric{{ $metric->id }}">
                             <i class="bi bi-pencil"></i>
                         </button>
-                        <form action="{{ route('forms.score-metrics.destroy', [$form, $metric]) }}" method="POST" data-confirm="Remove this metric?">
+                        <form action="{{ route('forms.score-metrics.destroy', [$form, $metric]) }}" method="POST" data-confirm="{{ __('forms.confirm_remove_metric') }}">
                             @csrf @method('DELETE')
                             <button class="btn btn-outline-danger btn-sm"><i class="bi bi-x"></i></button>
                         </form>
@@ -129,15 +126,15 @@
                         <form method="POST" action="{{ route('forms.score-metrics.update', [$form, $metric]) }}" class="metric-form">
                             @csrf @method('PUT')
                             <div class="mb-2">
-                                <label class="form-label small mb-1">Name</label>
+                                <label class="form-label small mb-1">{{ __('common.name') }}</label>
                                 <input type="text" name="name" class="form-control form-control-sm" value="{{ $metric->name }}" required>
                             </div>
                             <div class="row g-2 mb-2">
                                 <div class="col-6">
-                                    <label class="form-label small mb-1">Calculation</label>
+                                    <label class="form-label small mb-1">{{ __('forms.calculation') }}</label>
                                     <select name="operation" class="form-select form-select-sm">
-                                        <option value="sum" @selected($metric->operation === 'sum')>Sum</option>
-                                        <option value="average" @selected($metric->operation === 'average')>Average</option>
+                                        <option value="sum" @selected($metric->operation === 'sum')>{{ \App\Support\LocaleHelper::enum('metric_operation', 'sum') }}</option>
+                                        <option value="average" @selected($metric->operation === 'average')>{{ \App\Support\LocaleHelper::enum('metric_operation', 'average') }}</option>
                                     </select>
                                 </div>
                                 <div class="col-6 d-flex align-items-end">
@@ -145,7 +142,7 @@
                                         <input type="hidden" name="show_in_reports" value="0">
                                         <input class="form-check-input" type="checkbox" name="show_in_reports" value="1"
                                                id="metricShow{{ $metric->id }}" @checked($metric->show_in_reports)>
-                                        <label class="form-check-label small" for="metricShow{{ $metric->id }}">Show in reports</label>
+                                        <label class="form-check-label small" for="metricShow{{ $metric->id }}">{{ __('forms.show_in_reports') }}</label>
                                     </div>
                                 </div>
                             </div>
@@ -153,11 +150,11 @@
                                 <input type="hidden" name="grade_by_academic_title" value="0">
                                 <input class="form-check-input grade-by-title-toggle" type="checkbox" name="grade_by_academic_title" value="1"
                                        id="metricGradeByTitle{{ $metric->id }}" @checked($metric->grade_by_academic_title)>
-                                <label class="form-check-label small" for="metricGradeByTitle{{ $metric->id }}">Grade by academic title</label>
+                                <label class="form-check-label small" for="metricGradeByTitle{{ $metric->id }}">{{ __('forms.grade_by_title') }}</label>
                             </div>
 
                             <div class="title-grade-block" data-title-grades @unless($metric->grade_by_academic_title) style="display:none" @endunless>
-                                <label class="form-label small mb-1">Grades per academic title</label>
+                                <label class="form-label small mb-1">{{ __('forms.grades_per_title') }}</label>
                                 <div data-title-blocks-container>
                                     @foreach($metric->gradesGroupedByAcademicTitle() as $ti => $titleGrades)
                                         @include('forms.partials.academic_title_grade_block', [
@@ -169,23 +166,23 @@
                                     @endforeach
                                 </div>
                                 <button type="button" class="btn btn-outline-primary btn-sm mb-3 add-title-block">
-                                    <i class="bi bi-plus"></i> Add academic title
+                                    <i class="bi bi-plus"></i> {{ __('forms.add_academic_title') }}
                                 </button>
                             </div>
 
                             <div class="custom-grade-block" data-custom-grades @if($metric->grade_by_academic_title) style="display:none" @endif>
-                                <label class="form-label small mb-1">Letter grade mapping (same for all staff)</label>
+                                <label class="form-label small mb-1">{{ __('forms.letter_grade_mapping') }}</label>
                                 <div class="grade-rows mb-2" data-grade-container>
                                     @foreach($metric->grades->whereNull('academic_title') as $gi => $g)
                                         @include('forms.partials.grade_row', ['index' => $gi, 'grade' => $g])
                                     @endforeach
                                 </div>
                                 <div class="mb-3">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm add-grade-row"><i class="bi bi-plus"></i> Add grade</button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm add-grade-row"><i class="bi bi-plus"></i> {{ __('forms.add_grade') }}</button>
                                 </div>
                             </div>
 
-                            <label class="form-label small mb-1">Questions</label>
+                            <label class="form-label small mb-1">{{ __('forms.questions_label') }}</label>
                             <div class="mb-2" style="max-height:120px; overflow-y:auto;">
                                 @foreach($form->questions->filter(fn ($q) => in_array($q->type, ['rating', 'number'], true)) as $q)
                                     <div class="form-check">
@@ -196,13 +193,13 @@
                                     </div>
                                 @endforeach
                             </div>
-                            <button class="btn btn-primary btn-sm"><i class="bi bi-save"></i> Save metric</button>
+                            <button class="btn btn-primary btn-sm"><i class="bi bi-save"></i> {{ __('forms.save_metric') }}</button>
                         </form>
                     </div>
                 </div>
             </div>
         @empty
-            <p class="text-muted small mb-0">No derived metrics yet.</p>
+            <p class="text-muted small mb-0">{{ __('forms.no_derived_metrics') }}</p>
         @endforelse
     </div>
 </div>

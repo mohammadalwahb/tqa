@@ -28,7 +28,7 @@ class EvaluationFormController extends Controller
         $form = EvaluationForm::create(array_merge($request->validated(), [
             'created_by' => $request->user()->id,
         ]));
-        return redirect()->route('forms.show', $form)->with('success', 'Form created. Add questions below.');
+        return redirect()->route('forms.show', $form)->with('success', __('messages.form_created'));
     }
 
     public function show(EvaluationForm $form): View
@@ -60,13 +60,13 @@ class EvaluationFormController extends Controller
     public function update(EvaluationFormRequest $request, EvaluationForm $form): RedirectResponse
     {
         $form->update($request->validated());
-        return redirect()->route('forms.show', $form)->with('success', 'Form updated.');
+        return redirect()->route('forms.show', $form)->with('success', __('messages.form_updated'));
     }
 
     public function destroy(EvaluationForm $form): RedirectResponse
     {
         $form->delete();
-        return redirect()->route('forms.index')->with('success', 'Form deleted.');
+        return redirect()->route('forms.index')->with('success', __('messages.form_deleted'));
     }
 
     public function storeCategory(Request $request, EvaluationForm $form): RedirectResponse
@@ -82,7 +82,7 @@ class EvaluationFormController extends Controller
             'include_in_final_score' => $request->boolean('include_in_final_score', true),
         ]);
 
-        return back()->with('success', 'Category added.');
+        return back()->with('success', __('messages.category_added'));
     }
 
     public function updateCategory(Request $request, EvaluationForm $form, EvaluationCategory $category): RedirectResponse
@@ -104,7 +104,7 @@ class EvaluationFormController extends Controller
 
         $category->save();
 
-        return back()->with('success', 'Category updated.');
+        return back()->with('success', __('messages.category_updated'));
     }
 
     public function destroyCategory(EvaluationForm $form, EvaluationCategory $category): RedirectResponse
@@ -113,6 +113,6 @@ class EvaluationFormController extends Controller
         $category->questions()->update(['evaluation_category_id' => null]);
         $category->delete();
 
-        return back()->with('success', 'Category removed.');
+        return back()->with('success', __('messages.category_removed'));
     }
 }

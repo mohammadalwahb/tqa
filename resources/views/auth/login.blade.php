@@ -1,21 +1,33 @@
+@php
+    use App\Support\LocaleHelper;
+    $appLocale = LocaleHelper::current();
+    $appDirection = LocaleHelper::direction();
+@endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ $appLocale }}" dir="{{ $appDirection }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign in · {{ config('app.name', 'TQA') }}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <title>{{ __('login.title') }} · {{ config('app.name', 'TQA') }}</title>
+    @if($appDirection === 'rtl')
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+    @else
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    @endif
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body {
             background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', system-ui, sans-serif;
             color: #fff;
+            padding: 1rem;
         }
+        .login-lang { position: absolute; top: 1rem; {{ $appDirection === 'rtl' ? 'left' : 'right' }}: 1rem; }
         .login-card {
             background: #fff;
             color: #0f172a;
@@ -51,23 +63,24 @@
             font-size: .8rem;
             margin: .2rem .2rem 0 0;
         }
+        [dir="rtl"] body { font-family: 'Segoe UI', 'Noto Sans Arabic', 'Tahoma', system-ui, sans-serif; }
     </style>
 </head>
 <body>
+<div class="login-lang">
+    @include('partials.language-switcher')
+</div>
 <div class="login-card">
     <div class="brand">
         <i class="bi bi-mortarboard-fill"></i>
         <div>
             <p class="title mb-0">{{ config('app.name', 'TQA') }}</p>
-            <p class="text-muted small mb-0">Teaching Quality Assessment</p>
+            <p class="text-muted small mb-0">{{ __('login.tagline') }}</p>
         </div>
     </div>
 
-    <h2 class="h5">Sign in to your account</h2>
-    <p class="text-muted small mb-4">
-        Use your university Google account to sign in. Only authorised university emails
-        are permitted.
-    </p>
+    <h2 class="h5">{{ __('login.title') }}</h2>
+    <p class="text-muted small mb-4">{{ __('login.subtitle') }}</p>
 
     @if ($errors->any())
         <div class="alert alert-danger small">
@@ -83,17 +96,18 @@
             <path fill="#4CAF50" d="M24 43.5c5 0 9.6-1.9 13-5l-6-5.1c-1.9 1.4-4.4 2.2-7 2.2-5.3 0-9.7-3.1-11.3-7.5l-6.5 5C9.7 39.5 16.3 43.5 24 43.5z"/>
             <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.3 4.1-4.3 5.4l6 5.1C40.7 35.5 43.5 30.2 43.5 24c0-1.2-.1-2.3-.4-3.5z"/>
         </svg>
-        Continue with Google
+        {{ __('login.continue_google') }}
     </a>
 
     <hr class="my-4">
 
-    <p class="small text-muted mb-2">Allowed sign-in domains:</p>
+    <p class="small text-muted mb-2">{{ __('login.allowed_domains') }}</p>
     <div>
         @foreach($allowedDomains as $domain)
             <span class="domain-chip">@<span>{{ $domain }}</span></span>
         @endforeach
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

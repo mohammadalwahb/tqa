@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Create Committee')
+@php
+    use App\Support\LocaleHelper;
+    $collegeName = $college ? LocaleHelper::collegeDisplayName($college) : '';
+@endphp
+
+@section('title', __('committees.create_title'))
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css">
@@ -14,12 +19,12 @@
 @if(!$college)
     <div class="alert alert-warning">
         <i class="bi bi-info-circle"></i>
-        You don't have a college assigned. Please ask the Super Admin to assign you to a college from the Coordinators page.
+        {{ __('committees.no_college') }}
     </div>
 @else
     <ul class="nav nav-tabs mb-3" id="committeeTabs" role="tablist">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#localTab" type="button">Local Committee</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#hdTab" type="button">HD Committee</button></li>
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#localTab" type="button">{{ __('committees.tab_local') }}</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#hdTab" type="button">{{ __('committees.tab_hd') }}</button></li>
     </ul>
 
     <div class="tab-content">
@@ -29,20 +34,20 @@
                 <input type="hidden" name="type" value="local">
 
                 <div class="card table-card mb-3">
-                    <div class="card-header"><h6 class="mb-0">Local Committee – {{ $college->name_en }}</h6></div>
+                    <div class="card-header"><h6 class="mb-0">{{ __('committees.local_header', ['college' => $collegeName]) }}</h6></div>
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Department <span class="text-danger">*</span></label>
+                                <label class="form-label">{{ __('committees.department') }} <span class="text-danger">*</span></label>
                                 <select name="department_id" id="localDept" class="form-select" required>
-                                    <option value="">— Choose —</option>
+                                    <option value="">{{ __('common.choose') }}</option>
                                     @foreach($departments as $d)
-                                        <option value="{{ $d->id }}">{{ $d->name_en }}</option>
+                                        <option value="{{ $d->id }}">{{ LocaleHelper::departmentDisplayName($d) }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Evaluation Period <span class="text-danger">*</span></label>
+                                <label class="form-label">{{ __('committees.evaluation_period') }} <span class="text-danger">*</span></label>
                                 <select name="evaluation_period_id" class="form-select" required>
                                     @foreach($periods as $p)
                                         <option value="{{ $p->id }}" @selected($period && $period->id == $p->id)>{{ $p->name }}</option>
@@ -50,49 +55,46 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Evaluation Form</label>
+                                <label class="form-label">{{ __('committees.evaluation_form') }}</label>
                                 <select name="evaluation_form_id" class="form-select">
-                                    <option value="">— Default Active —</option>
+                                    <option value="">{{ __('committees.form_default') }}</option>
                                     @foreach($forms->where('target_type', 'staff') as $f)
                                         <option value="{{ $f->id }}">{{ $f->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Committee Name</label>
-                                <input type="text" name="name" class="form-control" placeholder="Optional">
+                                <label class="form-label">{{ __('committees.committee_name') }}</label>
+                                <input type="text" name="name" class="form-control" placeholder="{{ __('common.optional') }}">
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card table-card mb-3">
-                    <div class="card-header"><h6 class="mb-0">Members</h6></div>
+                    <div class="card-header"><h6 class="mb-0">{{ __('committees.members') }}</h6></div>
                     <div class="card-body">
-                        <p class="text-muted small">
-                            Required: 1 member from the chosen department, 1 from another department. You (the coordinator) are added automatically.
-                            Type in the box to search by name.
-                        </p>
+                        <p class="text-muted small">{{ __('committees.local_members_help') }}</p>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Same-department member <span class="text-danger">*</span></label>
+                                <label class="form-label">{{ __('committees.same_dept_member') }} <span class="text-danger">*</span></label>
                                 <select name="same_department_member_id" id="localSameDept" class="staff-member-select" required>
-                                    <option disabled value="">— Select department first —</option>
+                                    <option disabled value="">{{ __('committees.select_dept_first') }}</option>
                                 </select>
-                                <small class="text-muted">One staff member from the chosen department.</small>
+                                <small class="text-muted">{{ __('committees.same_dept_hint') }}</small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Other-department member <span class="text-danger">*</span></label>
+                                <label class="form-label">{{ __('committees.other_dept_member') }} <span class="text-danger">*</span></label>
                                 <select name="other_department_member_id" id="localOtherDept" class="staff-member-select" required>
-                                    <option disabled value="">— Select department first —</option>
+                                    <option disabled value="">{{ __('committees.select_dept_first') }}</option>
                                 </select>
-                                <small class="text-muted">Staff member from a different department of {{ $college->name_en }}.</small>
+                                <small class="text-muted" id="localOtherDeptHint">{{ __('committees.other_dept_hint', ['college' => $collegeName]) }}</small>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <button class="btn btn-primary"><i class="bi bi-people"></i> Create Local Committee</button>
+                <button class="btn btn-primary"><i class="bi bi-people"></i> {{ __('committees.create_local') }}</button>
             </form>
         </div>
 
@@ -102,25 +104,21 @@
                 <input type="hidden" name="type" value="hd">
 
                 <div class="card table-card mb-3">
-                    <div class="card-header"><h6 class="mb-0">HD Committee – {{ $college->name_en }}</h6></div>
+                    <div class="card-header"><h6 class="mb-0">{{ __('committees.hd_header', ['college' => $collegeName]) }}</h6></div>
                     <div class="card-body">
-                        <p class="text-muted small">
-                            Each Head of Department gets a dedicated committee. Members:
-                            Dean of the College (auto), you (the Quality College Coordinator),
-                            one same-department staff member, and one other-department member from {{ $college->name_en }}.
-                        </p>
+                        <p class="text-muted small">{{ __('committees.hd_members_help') }}</p>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="form-label">Department <span class="text-danger">*</span></label>
+                                <label class="form-label">{{ __('committees.department') }} <span class="text-danger">*</span></label>
                                 <select name="department_id" id="hdDept" class="form-select" required>
-                                    <option value="">— Choose —</option>
+                                    <option value="">{{ __('common.choose') }}</option>
                                     @foreach($departments as $d)
-                                        <option value="{{ $d->id }}">{{ $d->name_en }}</option>
+                                        <option value="{{ $d->id }}">{{ LocaleHelper::departmentDisplayName($d) }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Evaluation Period <span class="text-danger">*</span></label>
+                                <label class="form-label">{{ __('committees.evaluation_period') }} <span class="text-danger">*</span></label>
                                 <select name="evaluation_period_id" class="form-select" required>
                                     @foreach($periods as $p)
                                         <option value="{{ $p->id }}" @selected($period && $period->id == $p->id)>{{ $p->name }}</option>
@@ -128,37 +126,37 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Same-department member <span class="text-danger">*</span></label>
+                                <label class="form-label">{{ __('committees.same_dept_member') }} <span class="text-danger">*</span></label>
                                 <select name="same_department_member_id" id="hdSameDept" class="staff-member-select" required>
-                                    <option disabled value="">— Select department first —</option>
+                                    <option disabled value="">{{ __('committees.select_dept_first') }}</option>
                                 </select>
-                                <small class="text-muted d-block">One staff member from the chosen department (not the Head).</small>
+                                <small class="text-muted d-block">{{ __('committees.same_dept_hint') }}</small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Other-department member <span class="text-danger">*</span></label>
+                                <label class="form-label">{{ __('committees.college_member') }} <span class="text-danger">*</span></label>
                                 <select name="other_department_member_id" id="hdOtherDept" class="staff-member-select" required>
-                                    <option disabled value="">— Select department first —</option>
+                                    <option disabled value="">{{ __('committees.select_dept_first') }}</option>
                                 </select>
-                                <small class="text-muted d-block">One staff member from {{ $college->name_en }} (may be from the same department).</small>
+                                <small class="text-muted d-block">{{ __('committees.college_member_hint', ['college' => $collegeName]) }}</small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Evaluation Form</label>
+                                <label class="form-label">{{ __('committees.evaluation_form') }}</label>
                                 <select name="evaluation_form_id" class="form-select">
-                                    <option value="">— Default Active —</option>
+                                    <option value="">{{ __('committees.form_default') }}</option>
                                     @foreach($forms as $f)
                                         <option value="{{ $f->id }}">{{ $f->name }} ({{ $f->target_type }})</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-12">
-                                <label class="form-label">Committee Name</label>
-                                <input type="text" name="name" class="form-control" placeholder="Optional">
+                                <label class="form-label">{{ __('committees.committee_name') }}</label>
+                                <input type="text" name="name" class="form-control" placeholder="{{ __('common.optional') }}">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <button class="btn btn-primary"><i class="bi bi-people"></i> Create HD Committee</button>
+                <button class="btn btn-primary"><i class="bi bi-people"></i> {{ __('committees.create_hd') }}</button>
             </form>
         </div>
     </div>
@@ -169,6 +167,12 @@
 <script>
     const collegeId = {{ $college?->id ?? 'null' }};
     const staffSelects = {};
+    const i18n = {
+        noStaff: @json(__('committees.no_staff')),
+        searchStaff: @json(__('committees.search_staff')),
+        universityWide: @json(__('committees.university_wide_hint')),
+        otherDeptHint: @json(__('committees.other_dept_hint', ['college' => $collegeName])),
+    };
 
     async function fetchStaff(departmentId, mode) {
         const params = new URLSearchParams({ college_id: collegeId });
@@ -181,14 +185,24 @@
             params.set('department_id', departmentId);
             params.set('exclude_head', '1');
         } else {
+            params.set('filter', 'other');
             params.set('exclude_department_id', departmentId);
         }
         const url = "{{ route('committees.staff-options') }}?" + params.toString();
         try {
             const res = await fetch(url, { headers: { Accept: 'application/json' } });
-            if (!res.ok) return [];
-            return await res.json();
-        } catch { return []; }
+            if (!res.ok) return { items: [], university_wide: false };
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                return { items: data, university_wide: false };
+            }
+            return {
+                items: data.items ?? [],
+                university_wide: Boolean(data.university_wide),
+            };
+        } catch {
+            return { items: [], university_wide: false };
+        }
     }
 
     function initStaffSelect(selectEl, options = {}) {
@@ -200,7 +214,7 @@
         staffSelects[selectEl.id] = new TomSelect(selectEl, {
             maxItems: selectEl.multiple ? 2 : 1,
             maxOptions: null,
-            placeholder: options.placeholder || 'Type to search staff…',
+            placeholder: options.placeholder || i18n.searchStaff,
             plugins: selectEl.multiple ? ['remove_button'] : [],
             sortField: { field: 'text', direction: 'asc' },
             onItemAdd: function () {
@@ -212,7 +226,8 @@
         return staffSelects[selectEl.id];
     }
 
-    function refreshStaffSelect(selectEl, items, emptyMessage) {
+    function refreshStaffSelect(selectEl, payload, emptyMessage) {
+        const items = payload.items ?? payload;
         const ts = staffSelects[selectEl.id] || initStaffSelect(selectEl, { placeholder: emptyMessage });
 
         ts.clear(true);
@@ -228,20 +243,29 @@
         ts.refreshOptions(false);
     }
 
+    function setUniversityWideHint(hintEl, show) {
+        if (!hintEl) return;
+        hintEl.textContent = show ? i18n.universityWide : i18n.otherDeptHint;
+        hintEl.classList.toggle('text-info', show);
+        hintEl.classList.toggle('text-muted', !show);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         const localDept = document.getElementById('localDept');
         const sameDept  = document.getElementById('localSameDept');
         const otherDept = document.getElementById('localOtherDept');
+        const otherHint = document.getElementById('localOtherDeptHint');
 
         localDept?.addEventListener('change', async (e) => {
             const id = e.target.value;
             if (!id) return;
-            const [same, other] = await Promise.all([
+            const [samePayload, otherPayload] = await Promise.all([
                 fetchStaff(id, 'same'),
                 fetchStaff(id, 'other'),
             ]);
-            refreshStaffSelect(sameDept, same, 'No staff members found.');
-            refreshStaffSelect(otherDept, other, 'No staff members found.');
+            refreshStaffSelect(sameDept, samePayload, i18n.noStaff);
+            refreshStaffSelect(otherDept, otherPayload, i18n.noStaff);
+            setUniversityWideHint(otherHint, otherPayload.university_wide);
         });
 
         const hdDept = document.getElementById('hdDept');
@@ -250,12 +274,12 @@
         hdDept?.addEventListener('change', async (e) => {
             const id = e.target.value;
             if (!id) return;
-            const [same, college] = await Promise.all([
+            const [samePayload, collegePayload] = await Promise.all([
                 fetchStaff(id, 'same'),
                 fetchStaff(id, 'college'),
             ]);
-            refreshStaffSelect(hdSameDept, same, 'No staff members found.');
-            refreshStaffSelect(hdOtherDept, college, 'No staff members found.');
+            refreshStaffSelect(hdSameDept, samePayload, i18n.noStaff);
+            refreshStaffSelect(hdOtherDept, collegePayload, i18n.noStaff);
         });
     });
 </script>

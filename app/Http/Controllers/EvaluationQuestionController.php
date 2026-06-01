@@ -31,7 +31,7 @@ class EvaluationQuestionController extends Controller
 
         app(SuperAdminEvaluationAssignmentService::class)->syncForForm($form);
 
-        return back()->with('success', 'Question added.');
+        return back()->with('success', __('messages.question_added'));
     }
 
     public function update(Request $request, EvaluationForm $form, EvaluationQuestion $question): RedirectResponse
@@ -54,14 +54,14 @@ class EvaluationQuestionController extends Controller
 
         app(SuperAdminEvaluationAssignmentService::class)->syncForForm($form);
 
-        return back()->with('success', 'Question updated.');
+        return back()->with('success', __('messages.question_updated'));
     }
 
     public function destroy(EvaluationForm $form, EvaluationQuestion $question): RedirectResponse
     {
         abort_unless($question->evaluation_form_id === $form->id, 404);
         $question->delete();
-        return back()->with('success', 'Question removed.');
+        return back()->with('success', __('messages.question_removed'));
     }
 
     public function reorder(Request $request, EvaluationForm $form): JsonResponse

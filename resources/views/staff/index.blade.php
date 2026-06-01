@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Staff Members')
+@section('title', __('staff.title'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -8,20 +8,20 @@
     <div class="d-flex gap-2">
         @can('import', App\Models\StaffMember::class)
             <a href="{{ route('staff.template') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-download"></i> Download CSV Template
+                <i class="bi bi-download"></i> {{ __('staff.download_template') }}
             </a>
             <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
-                <i class="bi bi-upload"></i> Import CSV
+                <i class="bi bi-upload"></i> {{ __('common.import_csv') }}
             </button>
         @endcan
         @can('create', App\Models\StaffMember::class)
             <a href="{{ route('staff.create') }}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-circle"></i> New Staff Member
+                <i class="bi bi-plus-circle"></i> {{ __('staff.new') }}
             </a>
         @endcan
         @role('Super Admin')
             <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#purgeStaffModal">
-                <i class="bi bi-trash3"></i> Delete all staff
+                <i class="bi bi-trash3"></i> {{ __('staff.delete_all') }}
             </button>
         @endrole
     </div>
@@ -29,27 +29,27 @@
 
 <div class="card table-card">
     <div class="card-header">
-        <h5 class="mb-0">Staff Members</h5>
+        <h5 class="mb-0">{{ __('staff.title') }}</h5>
         <form method="GET" class="d-flex gap-2">
             @unless($departmentHeadMode ?? false)
                 <select name="college_id" class="form-select form-select-sm">
-                    <option value="">All colleges</option>
+                    <option value="">{{ __('common.all_colleges') }}</option>
                     @foreach($colleges as $c)
-                        <option value="{{ $c->id }}" @selected(request('college_id') == $c->id)>{{ $c->name_en }}</option>
+                        <option value="{{ $c->id }}" @selected(request('college_id') == $c->id)>{{ \App\Support\LocaleHelper::collegeDisplayName($c) }}</option>
                     @endforeach
                 </select>
                 <select name="department_id" class="form-select form-select-sm">
-                    <option value="">All departments</option>
+                    <option value="">{{ __('common.all_departments') }}</option>
                     @foreach($departments as $d)
-                        <option value="{{ $d->id }}" @selected(request('department_id') == $d->id)>{{ $d->name_en }}</option>
+                        <option value="{{ $d->id }}" @selected(request('department_id') == $d->id)>{{ \App\Support\LocaleHelper::departmentDisplayName($d) }}</option>
                     @endforeach
                 </select>
             @else
                 <span class="badge bg-primary-subtle text-primary-emphasis align-self-center">
-                    {{ $headedDepartment?->name_en }}
+                    {{ \App\Support\LocaleHelper::departmentDisplayName($headedDepartment) }}
                 </span>
             @endunless
-            <input type="text" name="search" placeholder="Search name/email"
+            <input type="text" name="search" placeholder="{{ __('common.search_name_email') }}"
                    value="{{ request('search') }}" class="form-control form-control-sm">
             <button class="btn btn-sm btn-outline-primary"><i class="bi bi-funnel"></i></button>
         </form>
@@ -59,25 +59,25 @@
             <table class="table table-hover align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Full Name</th>
-                        <th>Email</th>
-                        <th>College / Department</th>
-                        <th>Title / Position</th>
-                        <th>Status</th>
-                        <th class="text-end">Actions</th>
+                        <th>{{ __('staff.full_name') }}</th>
+                        <th>{{ __('common.email') }}</th>
+                        <th>{{ __('staff.college_department') }}</th>
+                        <th>{{ __('staff.title_position') }}</th>
+                        <th>{{ __('common.status') }}</th>
+                        <th class="text-end">{{ __('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                 @forelse($staff as $s)
                     <tr>
                         <td>
-                            <strong>{{ $s->full_name_en }}</strong>
+                            <strong>{{ \App\Support\LocaleHelper::staffDisplayName($s) }}</strong>
                             @if($s->full_name_ku)<br><small class="text-muted">{{ $s->full_name_ku }}</small>@endif
                         </td>
                         <td>{{ $s->email }}</td>
                         <td>
-                            <small class="text-muted">{{ $s->college?->name_en }}</small><br>
-                            {{ $s->department?->name_en }}
+                            <small class="text-muted">{{ \App\Support\LocaleHelper::collegeDisplayName($s->college) }}</small><br>
+                            {{ \App\Support\LocaleHelper::departmentDisplayName($s->department) }}
                         </td>
                         <td>
                             {{ $s->academic_title ?? '—' }}<br>
@@ -96,7 +96,7 @@
                                 <a href="{{ route('staff.edit', $s) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil"></i></a>
                             @endcan
                             @can('delete', $s)
-                                <form action="{{ route('staff.destroy', $s) }}" method="POST" class="d-inline" data-confirm="Delete staff member?">
+                                <form action="{{ route('staff.destroy', $s) }}" method="POST" class="d-inline" data-confirm="{{ __('staff.confirm_delete') }}">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
                                 </form>
@@ -104,7 +104,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" class="text-center text-muted py-4">No staff members found.</td></tr>
+                    <tr><td colspan="6" class="text-center text-muted py-4">{{ __('staff.empty') }}</td></tr>
                 @endforelse
                 </tbody>
             </table>
@@ -119,16 +119,18 @@
     <div class="modal-dialog">
         <form action="{{ route('staff.import') }}" method="POST" enctype="multipart/form-data" class="modal-content">
             @csrf
-            <div class="modal-header"><h5 class="modal-title">Import staff from CSV / Excel</h5>
+            <div class="modal-header"><h5 class="modal-title">{{ __('staff.import_modal_title') }}</h5>
                 <button class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
+                <p class="small text-muted mb-2">{{ __('staff.import_help_1') }}</p>
                 <p class="small text-muted mb-2">
-                    Use the CSV template columns exactly as listed. Institutional e-mail must use an allowed university domain.
-                    Employee type, qualification, academic title, position, and status must match values configured under
-                    <strong>Staff Field Options</strong>.
-                    For Kurdish names, use the downloaded template or save your spreadsheet as <strong>CSV UTF-8</strong> (Excel: Save As → CSV UTF-8).
-                    Position <strong>Dean</strong> or <strong>Head of Department</strong> automatically assigns organizational roles (editable under
-                    <a href="{{ route('org-roles.index') }}">Organizational Roles</a>).
+                    {{ __('staff.import_help_2') }}
+                    <strong>{{ __('nav.staff_options') }}</strong>.
+                </p>
+                <p class="small text-muted mb-2">{{ __('staff.import_help_3') }}</p>
+                <p class="small text-muted mb-2">
+                    {{ __('staff.import_help_4') }}
+                    <a href="{{ route('org-roles.index') }}">{{ __('org_roles.title') }}</a>.
                 </p>
                 <ul class="small text-muted mb-3 ps-3">
                     @foreach(\App\Imports\StaffImportTemplate::HEADERS as $column)
@@ -139,10 +141,10 @@
             </div>
             <div class="modal-footer">
                 <a href="{{ route('staff.template') }}" class="btn btn-outline-secondary me-auto">
-                    <i class="bi bi-download"></i> Download CSV template
+                    <i class="bi bi-download"></i> {{ __('staff.download_template_btn') }}
                 </a>
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-primary"><i class="bi bi-upload"></i> Import</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('common.cancel') }}</button>
+                <button class="btn btn-primary"><i class="bi bi-upload"></i> {{ __('staff.import_btn') }}</button>
             </div>
         </form>
     </div>
@@ -155,23 +157,19 @@
         <form action="{{ route('staff.purge-all') }}" method="POST" class="modal-content">
             @csrf
             <div class="modal-header">
-                <h5 class="modal-title text-danger">Permanently delete all staff</h5>
+                <h5 class="modal-title text-danger">{{ __('staff.purge_title') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p class="text-danger fw-semibold">This cannot be undone.</p>
-                <p class="small text-muted">
-                    All staff records will be removed permanently, including soft-deleted rows.
-                    Related evaluations will be deleted. Dean / Head assignments will be cleared.
-                    User accounts are kept but unlinked from staff.
-                </p>
-                <label class="form-label">Type <code>DELETE ALL STAFF</code> to confirm</label>
+                <p class="text-danger fw-semibold">{{ __('staff.purge_warning') }}</p>
+                <p class="small text-muted">{{ __('staff.purge_body') }}</p>
+                <label class="form-label">{{ __('staff.purge_confirm_label') }} <code>{{ __('staff.purge_confirm_phrase') }}</code></label>
                 <input type="text" name="confirmation" class="form-control @error('confirmation') is-invalid @enderror" required>
                 @error('confirmation') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                <button class="btn btn-danger">Delete permanently</button>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('common.cancel') }}</button>
+                <button class="btn btn-danger">{{ __('staff.purge_btn') }}</button>
             </div>
         </form>
     </div>

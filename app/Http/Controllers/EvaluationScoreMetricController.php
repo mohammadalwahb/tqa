@@ -36,7 +36,7 @@ class EvaluationScoreMetricController extends Controller
 
         if ($questionIds->isEmpty()) {
 
-            return back()->with('error', 'Select at least one question from this form.');
+            return back()->with('error', __('messages.metric_select_questions'));
 
         }
 
@@ -64,7 +64,7 @@ class EvaluationScoreMetricController extends Controller
 
 
 
-        return back()->with('success', 'Derived metric added.');
+        return back()->with('success', __('messages.metric_added'));
 
     }
 
@@ -86,7 +86,7 @@ class EvaluationScoreMetricController extends Controller
 
         if ($questionIds->isEmpty()) {
 
-            return back()->with('error', 'Select at least one question from this form.');
+            return back()->with('error', __('messages.metric_select_questions'));
 
         }
 
@@ -112,7 +112,7 @@ class EvaluationScoreMetricController extends Controller
 
 
 
-        return back()->with('success', 'Derived metric updated.');
+        return back()->with('success', __('messages.metric_updated'));
 
     }
 
@@ -128,7 +128,7 @@ class EvaluationScoreMetricController extends Controller
 
 
 
-        return back()->with('success', 'Derived metric removed.');
+        return back()->with('success', __('messages.metric_removed'));
 
     }
 

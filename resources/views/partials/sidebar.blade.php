@@ -11,111 +11,111 @@
     <nav class="flex-grow-1 py-2">
         @role('Super Admin')
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
-                <i class="bi bi-speedometer2"></i> Dashboard
+                <i class="bi bi-speedometer2"></i> {{ __('nav.dashboard') }}
             </a>
         @endrole
 
         @can('committees.manage')
-            <div class="nav-section">Evaluation</div>
+            <div class="nav-section">{{ __('nav.evaluation') }}</div>
             <a class="nav-link {{ request()->routeIs('committees.*') ? 'active' : '' }}" href="{{ route('committees.index') }}">
-                <i class="bi bi-people"></i> Committees
+                <i class="bi bi-people"></i> {{ __('nav.committees') }}
             </a>
             <a class="nav-link {{ request()->routeIs('evaluations.*') ? 'active' : '' }}" href="{{ route('evaluations.index') }}">
-                <i class="bi bi-clipboard-check"></i> Evaluations
+                <i class="bi bi-clipboard-check"></i> {{ __('nav.evaluations') }}
             </a>
         @elsecan('evaluations.submit')
-            <div class="nav-section">Evaluation</div>
+            <div class="nav-section">{{ __('nav.evaluation') }}</div>
             <a class="nav-link {{ request()->routeIs('evaluations.*') ? 'active' : '' }}" href="{{ route('evaluations.index') }}">
-                <i class="bi bi-clipboard-check"></i> My Evaluations
+                <i class="bi bi-clipboard-check"></i> {{ __('nav.my_evaluations') }}
             </a>
         @endcan
 
         @can('reports.view')
             <a class="nav-link {{ request()->routeIs('reports.*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
-                <i class="bi bi-graph-up"></i> Reports
+                <i class="bi bi-graph-up"></i> {{ __('nav.reports') }}
             </a>
         @endcan
 
         @canany(['colleges.manage','departments.manage','staff.manage','viewAny,App\Models\StaffMember','staff_options.manage','staff_status.manage'])
-            <div class="nav-section">Organization</div>
+            <div class="nav-section">{{ __('nav.organization') }}</div>
             @can('colleges.manage')
                 <a class="nav-link {{ request()->routeIs('colleges.*') ? 'active' : '' }}" href="{{ route('colleges.index') }}">
-                    <i class="bi bi-building"></i> Colleges
+                    <i class="bi bi-building"></i> {{ __('nav.colleges') }}
                 </a>
             @endcan
             @can('departments.manage')
                 <a class="nav-link {{ request()->routeIs('departments.*') ? 'active' : '' }}" href="{{ route('departments.index') }}">
-                    <i class="bi bi-diagram-3"></i> Departments
+                    <i class="bi bi-diagram-3"></i> {{ __('nav.departments') }}
                 </a>
             @endcan
             @canany(['staff.manage', 'viewAny,App\Models\StaffMember'])
                 <a class="nav-link {{ request()->routeIs('staff.*') ? 'active' : '' }}" href="{{ route('staff.index') }}">
-                    <i class="bi bi-person-vcard"></i> Staff Members
+                    <i class="bi bi-person-vcard"></i> {{ __('nav.staff') }}
                 </a>
             @endcanany
             @canany(['staff_options.manage', 'staff_status.manage'])
                 <a class="nav-link {{ request()->routeIs('staff-options.*', 'staff-statuses.*') ? 'active' : '' }}" href="{{ route('staff-options.index') }}">
-                    <i class="bi bi-list-check"></i> Staff Field Options
+                    <i class="bi bi-list-check"></i> {{ __('nav.staff_options') }}
                 </a>
             @endcanany
             @can('org_roles.manage')
                 <a class="nav-link {{ request()->routeIs('org-roles.*') ? 'active' : '' }}" href="{{ route('org-roles.index') }}">
-                    <i class="bi bi-person-badge"></i> Organizational Roles
+                    <i class="bi bi-person-badge"></i> {{ __('nav.org_roles') }}
                 </a>
             @endcan
         @endcanany
 
         @canany(['forms.manage','periods.manage'])
-            <div class="nav-section">Evaluation Setup</div>
+            <div class="nav-section">{{ __('nav.evaluation_setup') }}</div>
             @can('forms.manage')
                 <a class="nav-link {{ request()->routeIs('forms.*') ? 'active' : '' }}" href="{{ route('forms.index') }}">
-                    <i class="bi bi-ui-checks"></i> Forms
+                    <i class="bi bi-ui-checks"></i> {{ __('nav.forms') }}
                 </a>
             @endcan
             @can('periods.manage')
                 <a class="nav-link {{ request()->routeIs('periods.*') ? 'active' : '' }}" href="{{ route('periods.index') }}">
-                    <i class="bi bi-calendar-range"></i> Evaluation Periods
+                    <i class="bi bi-calendar-range"></i> {{ __('nav.periods') }}
                 </a>
             @endcan
         @endcanany
 
         @role('Super Admin')
             <a class="nav-link {{ request()->routeIs('super-admins.*') ? 'active' : '' }}" href="{{ route('super-admins.index') }}">
-                <i class="bi bi-shield-lock"></i> Super Admins
+                <i class="bi bi-shield-lock"></i> {{ __('nav.super_admins') }}
             </a>
             <a class="nav-link {{ request()->routeIs('master-data.*') ? 'active' : '' }}" href="{{ route('master-data.index') }}">
-                <i class="bi bi-database-gear"></i> Master Data CSV
+                <i class="bi bi-database-gear"></i> {{ __('nav.master_data') }}
             </a>
         @endrole
 
         @canany(['users.manage','coordinators.manage','activity_log.view'])
-            <div class="nav-section">Administration</div>
+            <div class="nav-section">{{ __('nav.administration') }}</div>
             @can('coordinators.manage')
                 <a class="nav-link {{ request()->routeIs('coordinators.*') ? 'active' : '' }}" href="{{ route('coordinators.index') }}">
-                    <i class="bi bi-person-plus"></i> Quality Coordinators
+                    <i class="bi bi-person-plus"></i> {{ __('nav.coordinators') }}
                 </a>
             @endcan
             @can('users.manage')
                 <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
-                    <i class="bi bi-people-fill"></i> Users
+                    <i class="bi bi-people-fill"></i> {{ __('nav.users') }}
                 </a>
             @endcan
             @can('activity_log.view')
                 <a class="nav-link {{ request()->routeIs('activity-log.*') ? 'active' : '' }}" href="{{ route('activity-log.index') }}">
-                    <i class="bi bi-clock-history"></i> Activity Log
+                    <i class="bi bi-clock-history"></i> {{ __('nav.activity_log') }}
                 </a>
             @endcan
         @endcanany
     </nav>
 
     <div class="nav-foot">
-        Signed in as<br>
+        {{ __('nav.signed_in_as') }}<br>
         <strong class="text-white">{{ $user?->name }}</strong><br>
         <span class="text-info-emphasis small">{{ $user?->email }}</span>
         @if($user && $user->roles->count())
             <div class="mt-2">
                 @foreach($user->roles as $r)
-                    <span class="badge bg-primary-subtle text-primary-emphasis">{{ $r->name }}</span>
+                    <span class="badge bg-primary-subtle text-primary-emphasis">{{ \App\Support\LocaleHelper::roleDisplayName($r->name) }}</span>
                 @endforeach
             </div>
         @endif

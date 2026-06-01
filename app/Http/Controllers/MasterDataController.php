@@ -54,16 +54,19 @@ class MasterDataController extends Controller
 
         $import();
 
+        $issuesSuffix = empty($importer->errors)
+            ? ''
+            : __('messages.staff_import_issues', ['issues' => implode(' | ', array_slice($importer->errors, 0, 10))]);
+
         return redirect()
             ->route('master-data.index')
             ->with(
                 empty($importer->errors) ? 'success' : 'error',
-                sprintf(
-                    'Import finished. Created: %d, Updated: %d.%s',
-                    $importer->created,
-                    $importer->updated,
-                    empty($importer->errors) ? '' : ' Issues: ' . implode(' | ', array_slice($importer->errors, 0, 10))
-                )
+                __('messages.staff_import', [
+                    'created' => $importer->created,
+                    'updated' => $importer->updated,
+                    'issues' => $issuesSuffix,
+                ])
             );
     }
 }

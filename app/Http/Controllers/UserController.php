@@ -45,15 +45,15 @@ class UserController extends Controller
 
         $user->syncRoles($data['roles'] ?? []);
 
-        return redirect()->route('users.index')->with('success', 'User updated.');
+        return redirect()->route('users.index')->with('success', __('messages.user_updated'));
     }
 
     public function destroy(User $user): RedirectResponse
     {
         if ($user->id === auth()->id()) {
-            return redirect()->route('users.index')->with('error', 'You cannot delete your own account.');
+            return redirect()->route('users.index')->with('error', __('messages.user_cannot_delete_self'));
         }
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'User deleted.');
+        return redirect()->route('users.index')->with('success', __('messages.user_deleted'));
     }
 }

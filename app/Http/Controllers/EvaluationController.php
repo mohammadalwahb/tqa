@@ -113,8 +113,8 @@ class EvaluationController extends Controller
         }
 
         $message = $adminOverride && $evaluation->isSubmitted()
-            ? 'Evaluation answers updated.'
-            : 'Draft saved.';
+            ? __('messages.evaluation_updated')
+            : __('messages.evaluation_draft_saved');
 
         return back()->with('success', $message);
     }
@@ -124,7 +124,7 @@ class EvaluationController extends Controller
         $this->authorize('update', $evaluation);
 
         if ($evaluation->isSubmitted() && $request->user()->can('evaluations.manage')) {
-            return back()->with('error', 'This evaluation is already submitted. Use Save changes to update answers.');
+            return back()->with('error', __('messages.evaluation_already_submitted'));
         }
 
         try {
@@ -133,6 +133,6 @@ class EvaluationController extends Controller
             return back()->with('error', $e->getMessage())->withInput();
         }
 
-        return redirect()->route('evaluations.index')->with('success', 'Evaluation submitted. Thank you.');
+        return redirect()->route('evaluations.index')->with('success', __('messages.evaluation_submitted'));
     }
 }

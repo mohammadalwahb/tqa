@@ -32,7 +32,7 @@ class GoogleAuthController extends Controller
             Log::warning('Google OAuth callback failed', ['exception' => $e->getMessage()]);
 
             return redirect()->route('login')
-                ->withErrors(['email' => 'Could not authenticate with Google. Please try again.']);
+                ->withErrors(['email' => __('login.google_failed')]);
         }
 
         try {

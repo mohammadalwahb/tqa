@@ -1,12 +1,21 @@
+@php
+    use App\Support\LocaleHelper;
+    $appLocale = LocaleHelper::current();
+    $appDirection = LocaleHelper::direction();
+@endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ $appLocale }}" dir="{{ $appDirection }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Dashboard') · {{ config('app.name', 'TQA') }}</title>
+    <title>@yield('title', __('nav.dashboard')) · {{ config('app.name', 'TQA') }}</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    @if($appDirection === 'rtl')
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css">
+    @else
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    @endif
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.2.0/css/buttons.bootstrap5.min.css">
@@ -121,6 +130,19 @@
             .tqa-sidebar { position: fixed; left: -260px; transition: left .2s; z-index: 1050; }
             .tqa-sidebar.show { left: 0; }
         }
+
+        [dir="rtl"] .tqa-sidebar a.nav-link {
+            border-left: none;
+            border-right: 3px solid transparent;
+        }
+        [dir="rtl"] .tqa-sidebar a.nav-link.active {
+            border-right-color: var(--tqa-sidebar-active);
+        }
+        @media (max-width: 992px) {
+            [dir="rtl"] .tqa-sidebar { left: auto; right: -260px; }
+            [dir="rtl"] .tqa-sidebar.show { right: 0; left: auto; }
+        }
+        [dir="rtl"] body { font-family: 'Segoe UI', 'Noto Sans Arabic', 'Tahoma', system-ui, sans-serif; }
     </style>
 
     @stack('styles')
@@ -153,7 +175,7 @@
 
             @if ($errors->any())
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong><i class="bi bi-exclamation-triangle me-1"></i> Whoops!</strong>
+                    <strong><i class="bi bi-exclamation-triangle me-1"></i> {{ __('common.whoops') }}</strong>
                     <ul class="mb-0 mt-1">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
@@ -207,9 +229,9 @@
                 dom: '<"d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2"<"d-flex flex-wrap align-items-center gap-2"lB>f>rt<"d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2"ip>',
                 buttons: $(this).data('buttons') === false ? [] : ['copy', 'csv', 'excel', 'print'],
                 language: {
-                    emptyTable: 'No records found.',
-                    zeroRecords: 'No matching records found.',
-                    lengthMenu: 'Show _MENU_ rows',
+                    emptyTable: @json(__('common.no_records')),
+                    zeroRecords: @json(__('common.no_matching')),
+                    lengthMenu: @json(__('common.show_rows')),
                 },
             });
         });
@@ -217,15 +239,15 @@
         document.querySelectorAll('form[data-confirm]').forEach(function (form) {
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
-                const message = form.dataset.confirm || 'Are you sure?';
+                const message = form.dataset.confirm || @json(__('common.are_you_sure'));
                 Swal.fire({
-                    title: 'Are you sure?',
+                    title: @json(__('common.are_you_sure')),
                     text: message,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#dc2626',
                     cancelButtonColor: '#6b7280',
-                    confirmButtonText: 'Yes, proceed',
+                    confirmButtonText: @json(__('common.yes_proceed')),
                 }).then(function (result) {
                     if (result.isConfirmed) form.submit();
                 });

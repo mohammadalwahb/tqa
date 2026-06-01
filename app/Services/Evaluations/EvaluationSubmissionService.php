@@ -23,20 +23,20 @@ class EvaluationSubmissionService
 
         if (! $adminOverride) {
             if (! $period || ! $period->isOpen()) {
-                throw new RuntimeException('The evaluation period is closed.');
+                throw new RuntimeException(__('messages.evaluation_period_closed'));
             }
             if ($evaluation->isSubmitted()) {
-                throw new RuntimeException('This evaluation has already been submitted.');
+                throw new RuntimeException(__('messages.evaluation_locked'));
             }
         }
 
         if ($adminOverride && $finalize) {
-            throw new RuntimeException('Administrators cannot re-submit evaluations. Save your changes instead.');
+            throw new RuntimeException(__('messages.evaluation_admin_no_resubmit'));
         }
 
         $form = $evaluation->form()->with('questions.visibleToRoles')->first();
         if (! $form) {
-            throw new RuntimeException('Evaluation form is missing.');
+            throw new RuntimeException(__('messages.evaluation_form_missing'));
         }
 
         $questions = $form->questions->where('is_enabled', true);
@@ -71,21 +71,21 @@ class EvaluationSubmissionService
                         $min = (int) config('tqa.rating.min', 1);
                         $max = (int) config('tqa.rating.max', 5);
                         if ($ratingValue < $min || $ratingValue > $max) {
-                            throw new RuntimeException("Rating for question #{$question->id} must be between {$min} and {$max}.");
+                            throw new RuntimeException(__('messages.evaluation_rating_range', ['id' => $question->id, 'min' => $min, 'max' => $max]));
                         }
                         $ratingTotal += $ratingValue;
                         $ratingCount++;
                     } elseif ($finalize && $question->is_required) {
-                        throw new RuntimeException("Question \"{$question->text}\" is required.");
+                        throw new RuntimeException(__('messages.evaluation_question_required', ['text' => $question->text]));
                     }
                 }
 
                 if ($finalize && $question->is_required) {
                     if ($question->type === EvaluationQuestion::TYPE_TEXT && empty($textValue)) {
-                        throw new RuntimeException("A response is required for: {$question->text}");
+                        throw new RuntimeException(__('messages.evaluation_response_required', ['text' => $question->text]));
                     }
                     if ($question->type === EvaluationQuestion::TYPE_NUMBER && $numberValue === null) {
-                        throw new RuntimeException("A numeric value is required for: {$question->text}");
+                        throw new RuntimeException(__('messages.evaluation_numeric_required', ['text' => $question->text]));
                     }
                 }
 

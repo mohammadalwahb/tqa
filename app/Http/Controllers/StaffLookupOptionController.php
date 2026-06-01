@@ -56,7 +56,7 @@ class StaffLookupOptionController extends Controller
 
         return redirect()
             ->route('staff-options.index')
-            ->with('success', $result['restored'] ? 'Option restored.' : 'Option created.');
+            ->with('success', $result['restored'] ? __('messages.option_restored') : __('messages.option_created'));
     }
 
     public function edit(StaffLookupOption $staff_option): View
@@ -74,7 +74,7 @@ class StaffLookupOptionController extends Controller
 
         return redirect()
             ->route('staff-options.index')
-            ->with('success', 'Option updated.');
+            ->with('success', __('messages.option_updated'));
     }
 
     public function destroy(StaffLookupOption $staff_option): RedirectResponse
@@ -83,7 +83,7 @@ class StaffLookupOptionController extends Controller
         if ($inUse) {
             return redirect()
                 ->route('staff-options.index')
-                ->with('error', "Cannot delete \"{$staff_option->name}\" — it is assigned to {$inUse} staff member(s). Deactivate it instead.");
+                ->with('error', __('messages.option_in_use', ['name' => $staff_option->name, 'count' => $inUse]));
         }
 
         $staff_option->delete();
@@ -91,7 +91,7 @@ class StaffLookupOptionController extends Controller
 
         return redirect()
             ->route('staff-options.index')
-            ->with('success', 'Option deleted.');
+            ->with('success', __('messages.option_deleted'));
     }
 
     private function optionInUse(StaffLookupOption $option): int

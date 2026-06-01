@@ -7,17 +7,18 @@
     <h1 class="page-title">@yield('title', 'Dashboard')</h1>
 
     <div class="ms-auto d-flex align-items-center gap-3">
+        @include('partials.language-switcher')
         @php
             $period = \App\Models\EvaluationPeriod::currentlyOpen();
         @endphp
         @if($period)
             <span class="badge bg-success-subtle text-success-emphasis">
                 <i class="bi bi-circle-fill text-success me-1" style="font-size:.6rem;"></i>
-                {{ $period->name }} (open until {{ $period->end_date->format('Y-m-d') }})
+                {{ __('common.period_open_until', ['name' => $period->name, 'date' => $period->end_date->format('Y-m-d')]) }}
             </span>
         @else
             <span class="badge bg-warning-subtle text-warning-emphasis">
-                <i class="bi bi-clock me-1"></i> No open evaluation period
+                <i class="bi bi-clock me-1"></i> {{ __('common.no_open_period') }}
             </span>
         @endif
 
@@ -38,7 +39,7 @@
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="dropdown-item text-danger">
-                            <i class="bi bi-box-arrow-right me-1"></i> Sign out
+                            <i class="bi bi-box-arrow-right me-1"></i> {{ __('common.sign_out') }}
                         </button>
                     </form>
                 </li>

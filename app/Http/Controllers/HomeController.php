@@ -36,7 +36,7 @@ class HomeController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')->withErrors([
-            'email' => 'Your account has no role assigned. Please contact the administrator.',
+            'email' => __('login.no_role'),
         ]);
     }
 }

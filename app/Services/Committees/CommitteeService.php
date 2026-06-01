@@ -11,6 +11,7 @@ use App\Models\EvaluationPeriod;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Services\Evaluations\SuperAdminEvaluationAssignmentService;
+use App\Support\LocaleHelper;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -46,28 +47,23 @@ class CommitteeService
             : EvaluationForm::where('target_type', 'staff')->where('is_active', true)->first();
 
         if (! $coordinator->college_id || (int) $coordinator->college_id !== (int) $department->college_id) {
-            throw new RuntimeException('You can only create committees for your own college.');
+            throw new RuntimeException(__('messages.committee_own_college_only'));
         }
 
         $sameDeptStaffId  = (int) $data['same_department_member_id'];
         $otherDeptStaffId = (int) $data['other_department_member_id'];
 
         if ($sameDeptStaffId === $otherDeptStaffId) {
-            throw new RuntimeException('Same-department and other-department members must be different people.');
+            throw new RuntimeException(__('messages.committee_members_must_differ'));
         }
 
         $sameDeptStaff = StaffMember::findOrFail($sameDeptStaffId);
         if ((int) $sameDeptStaff->department_id !== (int) $department->id) {
-            throw new RuntimeException('The same-department member must belong to the chosen department.');
+            throw new RuntimeException(__('messages.committee_same_dept_required'));
         }
 
         $otherDeptStaff = StaffMember::findOrFail($otherDeptStaffId);
-        if ($otherDeptStaff->department_id === $department->id) {
-            throw new RuntimeException('The other-department member must be from a different department.');
-        }
-        if ($otherDeptStaff->college_id !== $department->college_id) {
-            throw new RuntimeException('The fourth member must be from another department of the same college.');
-        }
+        $this->assertValidOtherDepartmentMember($otherDeptStaff, $department);
 
         return DB::transaction(function () use ($coordinator, $department, $period, $form, $sameDeptStaff, $otherDeptStaff, $data) {
             $exists = Committee::where('type', Committee::TYPE_LOCAL)
@@ -77,7 +73,7 @@ class CommitteeService
                 ->first();
 
             if ($exists) {
-                throw new RuntimeException('A local committee already exists for this department in this period.');
+                throw new RuntimeException(__('messages.committee_local_exists'));
             }
 
             $committee = Committee::create([
@@ -145,37 +141,37 @@ class CommitteeService
         $college    = $department->college;
 
         if (! $department->head_staff_id) {
-            throw new RuntimeException("This department has no Head of Department assigned. Cannot build an HD committee.");
+            throw new RuntimeException(__('messages.committee_hd_no_head'));
         }
         if (! $college?->dean_staff_id) {
-            throw new RuntimeException('The Dean of the College must be assigned before creating an HD committee.');
+            throw new RuntimeException(__('messages.committee_hd_no_dean'));
         }
 
         if (! $coordinator->college_id || (int) $coordinator->college_id !== (int) $college->id) {
-            throw new RuntimeException('You can only create committees for your own college.');
+            throw new RuntimeException(__('messages.committee_own_college_only'));
         }
 
         $sameDeptStaffId  = (int) $data['same_department_member_id'];
         $otherDeptStaffId = (int) $data['other_department_member_id'];
 
         if ($sameDeptStaffId === $otherDeptStaffId) {
-            throw new RuntimeException('Same-department and other-department members must be different people.');
+            throw new RuntimeException(__('messages.committee_members_must_differ'));
         }
 
         $sameDeptStaff = StaffMember::findOrFail($sameDeptStaffId);
         if ((int) $sameDeptStaff->department_id !== (int) $department->id) {
-            throw new RuntimeException('The same-department member must belong to the chosen department.');
+            throw new RuntimeException(__('messages.committee_same_dept_required'));
         }
         if ((int) $sameDeptStaff->id === (int) $department->head_staff_id) {
-            throw new RuntimeException('The department head cannot be a committee member; they are the evaluatee.');
+            throw new RuntimeException(__('messages.committee_head_is_evaluatee'));
         }
 
         $otherDeptStaff = StaffMember::findOrFail($otherDeptStaffId);
         if ((int) $otherDeptStaff->college_id !== (int) $college->id) {
-            throw new RuntimeException('The other-department member must belong to the same college.');
+            throw new RuntimeException(__('committees.other_member_same_college'));
         }
         if ((int) $otherDeptStaff->id === (int) $department->head_staff_id) {
-            throw new RuntimeException('The department head cannot be a committee member; they are the evaluatee.');
+            throw new RuntimeException(__('messages.committee_head_is_evaluatee'));
         }
 
         $period = EvaluationPeriod::findOrFail($data['evaluation_period_id']);
@@ -191,7 +187,7 @@ class CommitteeService
                 ->first();
 
             if ($exists) {
-                throw new RuntimeException('An HD committee already exists for this department in this period.');
+                throw new RuntimeException(__('messages.committee_hd_exists'));
             }
 
             $committee = Committee::create([
@@ -326,6 +322,24 @@ class CommitteeService
         }
     }
 
+    private function assertValidOtherDepartmentMember(StaffMember $otherDeptStaff, Department $department): void
+    {
+        $singleDepartmentCollege = app(CommitteeStaffOptionsService::class)
+            ->collegeHasSingleDepartment((int) $department->college_id);
+
+        if ($singleDepartmentCollege) {
+            return;
+        }
+
+        if ((int) $otherDeptStaff->department_id === (int) $department->id) {
+            throw new RuntimeException(__('committees.other_member_different_department'));
+        }
+
+        if ((int) $otherDeptStaff->college_id !== (int) $department->college_id) {
+            throw new RuntimeException(__('committees.other_member_same_college'));
+        }
+    }
+
     private function addStaffMemberToCommittee(
         Committee $committee,
         ?StaffMember $staff,
@@ -333,12 +347,12 @@ class CommitteeService
         ?int $sourceDepartmentId = null,
     ): void {
         if (! $staff) {
-            throw new RuntimeException('A committee staff member record is missing.');
+            throw new RuntimeException(__('messages.committee_staff_missing'));
         }
 
         $user = $this->ensureUserForStaff($staff);
         if (! $user) {
-            throw new RuntimeException("Could not create a user account for {$staff->full_name_en}.");
+            throw new RuntimeException(__('messages.committee_user_create_failed', ['name' => LocaleHelper::staffDisplayName($staff)]));
         }
 
         CommitteeMember::create([

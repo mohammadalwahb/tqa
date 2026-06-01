@@ -7,8 +7,8 @@ use App\Models\Committee;
 use App\Models\Department;
 use App\Models\EvaluationForm;
 use App\Models\EvaluationPeriod;
-use App\Models\StaffMember;
 use App\Services\Committees\CommitteeService;
+use App\Services\Committees\CommitteeStaffOptionsService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -16,8 +16,10 @@ use Throwable;
 
 class CommitteeController extends Controller
 {
-    public function __construct(private readonly CommitteeService $committees)
-    {
+    public function __construct(
+        private readonly CommitteeService $committees,
+        private readonly CommitteeStaffOptionsService $staffOptions,
+    ) {
     }
 
     public function index(Request $request): View
@@ -70,7 +72,7 @@ class CommitteeController extends Controller
     {
         $type = $request->input('type');
         if (! in_array($type, ['local', 'hd'], true)) {
-            return back()->with('error', 'Unknown committee type.');
+            return back()->with('error', __('messages.committee_unknown_type'));
         }
 
         $request->validate([
@@ -109,7 +111,7 @@ class CommitteeController extends Controller
         }
 
         return redirect()->route('committees.show', $committee)
-            ->with('success', 'Committee created successfully.');
+            ->with('success', __('messages.committee_created'));
     }
 
     public function show(Committee $committee): View
@@ -129,46 +131,11 @@ class CommitteeController extends Controller
         $committee->members()->delete();
         $committee->delete();
 
-        return redirect()->route('committees.index')->with('success', 'Committee deleted.');
+        return redirect()->route('committees.index')->with('success', __('messages.committee_deleted'));
     }
 
     public function staffOptions(Request $request): \Illuminate\Http\JsonResponse
     {
-        $request->validate([
-            'college_id'            => ['required', 'exists:colleges,id'],
-            'department_id'         => ['nullable', 'exists:departments,id'],
-            'exclude_department_id' => ['nullable', 'exists:departments,id'],
-            'exclude_head'          => ['nullable'],
-            'filter'                => ['nullable', 'in:department,college'],
-        ]);
-
-        $query = StaffMember::query()
-            ->where('is_active', true)
-            ->where('college_id', $request->college_id)
-            ->orderBy('full_name_en');
-
-        if ($request->input('filter') === 'department' && $request->filled('department_id')) {
-            $query->where('department_id', $request->department_id);
-        } elseif ($request->filled('department_id') && $request->input('filter') !== 'college') {
-            $query->where('department_id', $request->department_id);
-        }
-
-        if ($request->filled('exclude_department_id')) {
-            $query->where('department_id', '<>', $request->exclude_department_id);
-        }
-
-        if ($request->boolean('exclude_head') && $request->filled('department_id')) {
-            $headId = Department::whereKey($request->department_id)->value('head_staff_id');
-            if ($headId) {
-                $query->where('id', '<>', $headId);
-            }
-        }
-
-        $rows = $query->with('department')->get();
-
-        return response()->json($rows->map(fn ($s) => [
-            'id'    => $s->id,
-            'label' => $s->full_name_en . ' · ' . ($s->department?->name_en ?? ''),
-        ]));
+        return response()->json($this->staffOptions->optionsForRequest($request));
     }
 }

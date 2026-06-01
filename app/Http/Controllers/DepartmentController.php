@@ -29,7 +29,7 @@ class DepartmentController extends Controller
     {
         Department::create($request->validated());
 
-        return redirect()->route('departments.index')->with('success', 'Department created.');
+        return redirect()->route('departments.index')->with('success', __('messages.department_created'));
     }
 
     public function edit(Department $department): View
@@ -44,13 +44,13 @@ class DepartmentController extends Controller
     {
         $department->update($request->validated());
 
-        return redirect()->route('departments.index')->with('success', 'Department updated.');
+        return redirect()->route('departments.index')->with('success', __('messages.department_updated'));
     }
 
     public function destroy(Department $department): RedirectResponse
     {
         $department->delete();
 
-        return redirect()->route('departments.index')->with('success', 'Department deleted.');
+        return redirect()->route('departments.index')->with('success', __('messages.department_deleted'));
     }
 }

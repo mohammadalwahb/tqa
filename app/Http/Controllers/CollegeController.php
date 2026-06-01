@@ -25,7 +25,7 @@ class CollegeController extends Controller
     {
         College::create($request->validated());
 
-        return redirect()->route('colleges.index')->with('success', 'College created successfully.');
+        return redirect()->route('colleges.index')->with('success', __('messages.college_created'));
     }
 
     public function edit(College $college): View
@@ -37,13 +37,13 @@ class CollegeController extends Controller
     {
         $college->update($request->validated());
 
-        return redirect()->route('colleges.index')->with('success', 'College updated successfully.');
+        return redirect()->route('colleges.index')->with('success', __('messages.college_updated'));
     }
 
     public function destroy(College $college): RedirectResponse
     {
         $college->delete();
 
-        return redirect()->route('colleges.index')->with('success', 'College deleted successfully.');
+        return redirect()->route('colleges.index')->with('success', __('messages.college_deleted'));
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\College;
 use App\Models\Department;
 use App\Models\StaffMember;
+use App\Support\LocaleHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -29,12 +30,12 @@ class OrganizationalRoleController extends Controller
         if (! empty($data['dean_staff_id'])) {
             $staff = StaffMember::find($data['dean_staff_id']);
             if ($staff && $staff->college_id !== $college->id) {
-                return back()->with('error', 'Dean must belong to this college.');
+                return back()->with('error', __('messages.dean_wrong_college'));
             }
         }
 
         $college->update($data);
-        return back()->with('success', 'Dean updated for ' . $college->name_en . '.');
+        return back()->with('success', __('messages.dean_updated', ['name' => LocaleHelper::collegeDisplayName($college)]));
     }
 
     public function updateDepartment(Request $request, Department $department): RedirectResponse
@@ -48,12 +49,12 @@ class OrganizationalRoleController extends Controller
             if (! empty($data[$field])) {
                 $staff = StaffMember::find($data[$field]);
                 if ($staff && $staff->department_id !== $department->id) {
-                    return back()->with('error', "Selected staff must belong to {$department->name_en}.");
+                    return back()->with('error', __('messages.staff_wrong_department', ['name' => LocaleHelper::departmentDisplayName($department)]));
                 }
             }
         }
 
         $department->update($data);
-        return back()->with('success', "Roles updated for {$department->name_en}.");
+        return back()->with('success', __('messages.roles_updated', ['name' => LocaleHelper::departmentDisplayName($department)]));
     }
 }

@@ -11,7 +11,7 @@
 @elseif($metricData['value'] !== null)
     <strong>{{ number_format((float) $metricData['value'], 2) }}</strong>
     @if(!empty($metricData['grade_by_academic_title']))
-        <br><small class="text-warning" title="Set the staff member's Academic title to match a configured title (e.g. Lecturer, Assistant Prof.)">No letter grade</small>
+        <br><small class="text-warning" title="{{ __('reports.title_attr_academic') }}">{{ __('reports.no_letter_grade') }}</small>
     @endif
 @else
     <span class="text-muted">—</span>

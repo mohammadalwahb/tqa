@@ -1,14 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Activity Log')
+@section('title', __('activity_log.title'))
 
 @section('content')
 <div class="card table-card">
-    <div class="card-header"><h5 class="mb-0">Recent Activity</h5></div>
+    <div class="card-header"><h5 class="mb-0">{{ __('activity_log.recent') }}</h5></div>
     <div class="card-body">
         <table class="table table-sm align-middle">
             <thead class="table-light">
-                <tr><th>When</th><th>User</th><th>Event</th><th>Subject</th><th>Description</th></tr>
+                <tr>
+                    <th>{{ __('common.when') }}</th>
+                    <th>{{ __('common.user') }}</th>
+                    <th>{{ __('common.event') }}</th>
+                    <th>{{ __('common.subject') }}</th>
+                    <th>{{ __('activity_log.description') }}</th>
+                </tr>
             </thead>
             <tbody>
             @foreach($activities as $a)

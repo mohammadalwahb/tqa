@@ -1,29 +1,29 @@
 @extends('layouts.app')
 
-@section('title', 'Reports')
+@section('title', __('reports.title'))
 
 @section('content')
 <div class="card table-card mb-3">
     <div class="card-body">
         <form method="GET" class="row g-2 align-items-end">
             <div class="col-md-4">
-                <label class="form-label">Evaluation Period</label>
+                <label class="form-label">{{ __('common.evaluation_period') }}</label>
                 <select name="period_id" class="form-select">
                     @foreach($periods as $p)
                         <option value="{{ $p->id }}" @selected($period && $period->id == $p->id)>{{ $p->name }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-funnel"></i> Apply</button></div>
+            <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-funnel"></i> {{ __('common.apply') }}</button></div>
             @if($period && $progress && $progress['required'] > 0)
                 <div class="col-md-3 ms-auto">
                     <a href="{{ route('reports.export.pdf', ['period_id' => $period->id]) }}" class="btn btn-outline-danger w-100">
-                        <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                        <i class="bi bi-file-earmark-pdf"></i> {{ __('reports.export_pdf') }}
                     </a>
                 </div>
                 <div class="col-md-3">
                     <a href="{{ route('reports.export.excel', ['period_id' => $period->id]) }}" class="btn btn-outline-success w-100">
-                        <i class="bi bi-file-earmark-excel"></i> Export Excel
+                        <i class="bi bi-file-earmark-excel"></i> {{ __('reports.export_excel') }}
                     </a>
                 </div>
             @endif
@@ -35,10 +35,10 @@
     <div class="col-md-12">
         <div class="card stat-card">
             <div class="card-body">
-                <h5 class="mb-3">University Evaluation Completion</h5>
+                <h5 class="mb-3">{{ __('reports.university_completion') }}</h5>
                 @if($progress && $progress['required'] > 0)
                     <div class="d-flex justify-content-between mb-1">
-                        <span>{{ $progress['completed'] }} of {{ $progress['required'] }} evaluations submitted</span>
+                        <span>{{ __('reports.completion_of', ['completed' => $progress['completed'], 'required' => $progress['required']]) }}</span>
                         <strong>{{ $progress['percentage'] }}%</strong>
                     </div>
                     <div class="progress" style="height:18px;">
@@ -47,7 +47,7 @@
                         </div>
                     </div>
                 @else
-                    <p class="text-muted mb-0">No evaluations yet for the selected period.</p>
+                    <p class="text-muted mb-0">{{ __('reports.no_evaluations_period') }}</p>
                 @endif
             </div>
         </div>
@@ -56,15 +56,19 @@
 
 <div class="card table-card">
     <div class="card-header">
-        <h6 class="mb-0">Per-Staff Evaluation Completion</h6>
+        <h6 class="mb-0">{{ __('reports.per_staff_completion') }}</h6>
     </div>
     <div class="card-body">
         <table class="table align-middle datatable">
             <thead class="table-light">
                 <tr>
-                    <th>Staff</th><th>Department</th><th>College</th>
-                    <th class="text-end">Required</th><th class="text-end">Completed</th>
-                    <th class="text-end">Completion %</th><th class="text-end">Average Score</th>
+                    <th>{{ __('nav.staff') }}</th>
+                    <th>{{ __('common.department') }}</th>
+                    <th>{{ __('common.college') }}</th>
+                    <th class="text-end">{{ __('reports.required') }}</th>
+                    <th class="text-end">{{ __('reports.completed') }}</th>
+                    <th class="text-end">{{ __('reports.completion_pct') }}</th>
+                    <th class="text-end">{{ __('reports.average_score') }}</th>
                     @foreach($reportQuestionColumns as $questionCol)
                         <th class="text-end" title="{{ $questionCol->text }}">
                             {{ \Illuminate\Support\Str::limit($questionCol->text, 35) }}
@@ -73,18 +77,18 @@
                     @foreach($derivedMetricColumns as $metricCol)
                         <th class="text-end">{{ $metricCol->name }}</th>
                     @endforeach
-                    <th class="text-end">Details</th>
+                    <th class="text-end">{{ __('reports.details') }}</th>
                 </tr>
             </thead>
             <tbody>
             @forelse($staffRows as $row)
                 <tr>
                     <td>
-                        <strong>{{ $row['staff']->full_name_en }}</strong><br>
+                        <strong>{{ \App\Support\LocaleHelper::staffDisplayName($row['staff']) }}</strong><br>
                         <small class="text-muted">{{ $row['staff']->email }}</small>
                     </td>
-                    <td>{{ $row['staff']->department?->name_en }}</td>
-                    <td>{{ $row['staff']->department?->college?->name_en }}</td>
+                    <td>{{ \App\Support\LocaleHelper::departmentDisplayName($row['staff']->department) }}</td>
+                    <td>{{ \App\Support\LocaleHelper::collegeDisplayName($row['staff']->department?->college) }}</td>
                     <td class="text-end">{{ $row['required'] }}</td>
                     <td class="text-end">{{ $row['completed'] }}</td>
                     <td class="text-end">
@@ -106,18 +110,18 @@
                     <td class="text-end text-nowrap">
                         @if($period && $row['completed'] > 0)
                             <a href="{{ route('reports.staff.export.pdf', ['staff' => $row['staff']->id, 'period_id' => $period->id]) }}"
-                               class="btn btn-outline-danger btn-sm" title="Download PDF">
+                               class="btn btn-outline-danger btn-sm" title="{{ __('common.download_pdf') }}">
                                 <i class="bi bi-file-earmark-pdf"></i>
                             </a>
                         @endif
                         <a href="{{ route('reports.staff.details', ['staff' => $row['staff']->id, 'period_id' => $period?->id]) }}"
-                           class="btn btn-outline-primary btn-sm" title="View details">
+                           class="btn btn-outline-primary btn-sm" title="{{ __('common.view_details') }}">
                             <i class="bi bi-graph-up"></i>
                         </a>
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="{{ 8 + $reportQuestionColumns->count() + $derivedMetricColumns->count() }}" class="text-muted text-center py-4">No data for this period.</td></tr>
+                <tr><td colspan="{{ 8 + $reportQuestionColumns->count() + $derivedMetricColumns->count() }}" class="text-muted text-center py-4">{{ __('reports.no_data_period') }}</td></tr>
             @endforelse
             </tbody>
         </table>

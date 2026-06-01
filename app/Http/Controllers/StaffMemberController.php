@@ -132,15 +132,11 @@ class StaffMemberController extends Controller
 
 
 
-        $message = 'Staff member created.';
+        $message = __('messages.staff_created');
 
         if ($evaluationsAdded > 0) {
-
-            $message .= " {$evaluationsAdded} committee evaluation(s) were added.";
-
+            $message .= ' '.__('messages.staff_evaluations_added', ['count' => $evaluationsAdded]);
         }
-
-
 
         return redirect()->route('staff.index')->with('success', $message);
 
@@ -202,15 +198,11 @@ class StaffMemberController extends Controller
 
 
 
-        $message = 'Staff member updated.';
+        $message = __('messages.staff_updated');
 
         if ($evaluationsAdded > 0) {
-
-            $message .= " {$evaluationsAdded} committee evaluation(s) were added.";
-
+            $message .= ' '.__('messages.staff_evaluations_added', ['count' => $evaluationsAdded]);
         }
-
-
 
         return redirect()->route('staff.index')->with('success', $message);
 
@@ -230,7 +222,7 @@ class StaffMemberController extends Controller
 
 
 
-        return redirect()->route('staff.index')->with('success', 'Staff member deleted.');
+        return redirect()->route('staff.index')->with('success', __('messages.staff_deleted'));
 
     }
 
@@ -290,7 +282,7 @@ class StaffMemberController extends Controller
 
             ->route('staff.index')
 
-            ->with('success', "Permanently deleted {$count} staff member(s) and cleared related evaluation data.");
+            ->with('success', __('messages.staff_purged', ['count' => $count]));
 
     }
 
@@ -318,22 +310,17 @@ class StaffMemberController extends Controller
 
 
 
+        $issuesSuffix = empty($import->errors)
+            ? ''
+            : __('messages.staff_import_issues', ['issues' => implode(' | ', array_slice($import->errors, 0, 10))]);
+
         return redirect()->route('staff.index')->with(
-
             empty($import->errors) ? 'success' : 'error',
-
-            sprintf(
-
-                'Import finished. Created: %d, Updated: %d.%s',
-
-                $import->created,
-
-                $import->updated,
-
-                empty($import->errors) ? '' : ' Issues: ' . implode(' | ', array_slice($import->errors, 0, 10))
-
-            )
-
+            __('messages.staff_import', [
+                'created' => $import->created,
+                'updated' => $import->updated,
+                'issues' => $issuesSuffix,
+            ])
         );
 
     }

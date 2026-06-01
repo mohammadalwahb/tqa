@@ -23,7 +23,7 @@ class EvaluationPeriodController extends Controller
     public function store(EvaluationPeriodRequest $request): RedirectResponse
     {
         EvaluationPeriod::create($request->validated());
-        return redirect()->route('periods.index')->with('success', 'Evaluation period created.');
+        return redirect()->route('periods.index')->with('success', __('messages.period_created'));
     }
 
     public function edit(EvaluationPeriod $period): View
@@ -34,12 +34,12 @@ class EvaluationPeriodController extends Controller
     public function update(EvaluationPeriodRequest $request, EvaluationPeriod $period): RedirectResponse
     {
         $period->update($request->validated());
-        return redirect()->route('periods.index')->with('success', 'Period updated.');
+        return redirect()->route('periods.index')->with('success', __('messages.period_updated'));
     }
 
     public function destroy(EvaluationPeriod $period): RedirectResponse
     {
         $period->delete();
-        return redirect()->route('periods.index')->with('success', 'Period deleted.');
+        return redirect()->route('periods.index')->with('success', __('messages.period_deleted'));
     }
 }

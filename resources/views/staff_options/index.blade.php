@@ -1,18 +1,16 @@
 @extends('layouts.app')
 
-@section('title', 'Staff Field Options')
+@section('title', __('staff_options.title'))
 
 @section('content')
-<p class="text-muted small mb-3">
-    Configure allowed values for staff forms and CSV import. Inactive values cannot be selected for new staff or imports.
-</p>
+<p class="text-muted small mb-3">{{ __('staff_options.intro') }}</p>
 
 @canany(['staff_options.manage', 'staff_status.manage'])
 <div class="card table-card mb-4">
     <div class="card-header">
-        <h5 class="mb-0">Status</h5>
+        <h5 class="mb-0">{{ __('staff_options.status_section') }}</h5>
         <a href="{{ route('staff-statuses.create') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-circle"></i> Add
+            <i class="bi bi-plus-circle"></i> {{ __('staff_options.add_status') }}
         </a>
     </div>
     <div class="card-body">
@@ -20,11 +18,11 @@
             <table class="table table-sm table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Name</th>
-                        <th>Color</th>
-                        <th class="text-end">Used by</th>
-                        <th>Active</th>
-                        <th class="text-end">Actions</th>
+                        <th>{{ __('common.name') }}</th>
+                        <th>{{ __('common.color') }}</th>
+                        <th class="text-end">{{ __('common.used_by') }}</th>
+                        <th>{{ __('common.active') }}</th>
+                        <th class="text-end">{{ __('common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -33,13 +31,13 @@
                         <td><strong>{{ $status->name }}</strong></td>
                         <td><span class="badge bg-{{ $status->color }}">{{ $status->color }}</span></td>
                         <td class="text-end">{{ $status->staff_members_count }}</td>
-                        <td>{{ $status->is_active ? 'Yes' : 'No' }}</td>
+                        <td>{{ $status->is_active ? __('common.yes') : __('common.no') }}</td>
                         <td class="text-end">
                             <a href="{{ route('staff-statuses.edit', $status) }}" class="btn btn-outline-secondary btn-sm">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <form action="{{ route('staff-statuses.destroy', $status) }}" method="POST" class="d-inline"
-                                  data-confirm="Delete this status?">
+                                  data-confirm="{{ __('staff_options.confirm_delete_status') }}">
                                 @csrf @method('DELETE')
                                 <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
                             </form>
@@ -47,7 +45,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="text-muted text-center py-3">No statuses configured yet.</td>
+                        <td colspan="5" class="text-muted text-center py-3">{{ __('staff_options.no_statuses') }}</td>
                     </tr>
                 @endforelse
                 </tbody>
@@ -62,9 +60,9 @@
     @php $options = $grouped[$field->value] ?? collect(); @endphp
     <div class="card table-card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">{{ $field->label() }}</h5>
+            <h5 class="mb-0">{{ \App\Support\LocaleHelper::staffFieldLabel($field->value) }}</h5>
             <a href="{{ route('staff-options.create', ['field' => $field->value]) }}" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-circle"></i> Add
+                <i class="bi bi-plus-circle"></i> {{ __('common.add') }}
             </a>
         </div>
         <div class="card-body">
@@ -72,22 +70,22 @@
                 <table class="table table-sm table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Name</th>
-                            <th>Active</th>
-                            <th class="text-end">Actions</th>
+                            <th>{{ __('common.name') }}</th>
+                            <th>{{ __('common.active') }}</th>
+                            <th class="text-end">{{ __('common.actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                     @forelse($options as $option)
                         <tr>
                             <td><strong>{{ $option->name }}</strong></td>
-                            <td>{{ $option->is_active ? 'Yes' : 'No' }}</td>
+                            <td>{{ $option->is_active ? __('common.yes') : __('common.no') }}</td>
                             <td class="text-end">
                                 <a href="{{ route('staff-options.edit', $option) }}" class="btn btn-outline-secondary btn-sm">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <form action="{{ route('staff-options.destroy', $option) }}" method="POST" class="d-inline"
-                                      data-confirm="Delete this option?">
+                                      data-confirm="{{ __('staff_options.confirm_delete_option') }}">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
                                 </form>
@@ -95,7 +93,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="text-muted text-center py-3">No values configured yet.</td>
+                            <td colspan="3" class="text-muted text-center py-3">{{ __('staff_options.no_values') }}</td>
                         </tr>
                     @endforelse
                     </tbody>

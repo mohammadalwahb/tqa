@@ -44,7 +44,7 @@ class GoogleAuthService
         $email = mb_strtolower((string) $socialUser->getEmail());
 
         if (! $this->emailIsAllowed($email)) {
-            throw new RuntimeException('Your email domain is not allowed to sign in.');
+            throw new RuntimeException(__('login.domain_not_allowed'));
         }
 
         return DB::transaction(function () use ($socialUser, $email) {
@@ -76,7 +76,7 @@ class GoogleAuthService
             }
 
             if (! $user->is_active) {
-                throw new RuntimeException('Your account is disabled. Please contact the administrator.');
+                throw new RuntimeException(__('login.account_disabled'));
             }
 
             return $user;

@@ -12,7 +12,7 @@
 @elseif($data['average'] !== null)
     <strong>{{ number_format((float) $data['average'], 2) }}</strong>
     @if($questionColumn->type === 'rating')
-        <span class="text-muted">/ 5</span>
+        <span class="text-muted">{{ __('evaluations.out_of_five') }}</span>
     @endif
 @else
     <span class="text-muted">—</span>

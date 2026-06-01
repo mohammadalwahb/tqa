@@ -28,7 +28,7 @@ class StaffStatusController extends Controller
         $result = $provisioner->storeStatus($request->validated());
         StaffAttributeValidator::flushCache();
 
-        $message = $result['restored'] ? 'Staff status restored.' : 'Staff status created.';
+        $message = $result['restored'] ? __('messages.status_restored') : __('messages.status_created');
 
         return redirect()->route('staff-options.index')->with('success', $message);
     }
@@ -43,7 +43,7 @@ class StaffStatusController extends Controller
         $staff_status->update($request->validated());
         StaffAttributeValidator::flushCache();
 
-        return redirect()->route('staff-options.index')->with('success', 'Staff status updated.');
+        return redirect()->route('staff-options.index')->with('success', __('messages.status_updated'));
     }
 
     public function destroy(StaffStatus $staff_status): RedirectResponse
@@ -51,6 +51,6 @@ class StaffStatusController extends Controller
         $staff_status->delete();
         StaffAttributeValidator::flushCache();
 
-        return redirect()->route('staff-options.index')->with('success', 'Staff status deleted.');
+        return redirect()->route('staff-options.index')->with('success', __('messages.status_deleted'));
     }
 }

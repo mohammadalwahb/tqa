@@ -11,12 +11,7 @@ enum StaffLookupField: string
 
     public function label(): string
     {
-        return match ($this) {
-            self::EmployeeType  => 'Employee type',
-            self::Qualification => 'Qualification',
-            self::AcademicTitle => 'Academic title',
-            self::Position      => 'Position',
-        };
+        return \App\Support\LocaleHelper::staffFieldLabel($this->value);
     }
 
     /** @return list<self> */

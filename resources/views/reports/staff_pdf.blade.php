@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ app()->getLocale() }}">
 <head>
     <meta charset="UTF-8">
-    <title>Staff Evaluation — {{ $staff->full_name_en }}</title>
+    <title>{{ __('reports.staff_evaluation', ['name' => \App\Support\LocaleHelper::staffDisplayName($staff)]) }}</title>
     <style>
         * { font-family: DejaVu Sans, sans-serif; }
         body { font-size: 10px; color: #1f2937; }
@@ -22,35 +22,35 @@
     </style>
 </head>
 <body>
-    <h1>{{ $staff->full_name_en }}</h1>
+    <h1>{{ \App\Support\LocaleHelper::staffDisplayName($staff) }}</h1>
     <div class="meta">
         {{ $staff->email }}<br>
-        {{ $staff->department?->college?->name_en }} · {{ $staff->department?->name_en }}<br>
-        Period: <strong>{{ $period->name }}</strong>
+        {{ \App\Support\LocaleHelper::collegeDisplayName($staff->department?->college) }} · {{ \App\Support\LocaleHelper::departmentDisplayName($staff->department) }}<br>
+        {{ __('reports.period_label') }} <strong>{{ $period->name }}</strong>
         ({{ $period->start_date->toDateString() }} → {{ $period->end_date->toDateString() }})<br>
-        Generated: {{ now()->toDateTimeString() }}
+        {{ __('reports.generated') }} {{ now()->toDateTimeString() }}
         @if($pdfData['overall'] !== null)
-            <br><span class="overall">Overall score: {{ number_format((float) $pdfData['overall'], 2) }}</span>
+            <br><span class="overall">{{ __('reports.overall_score_short') }} {{ number_format((float) $pdfData['overall'], 2) }}</span>
         @endif
     </div>
 
     @if(!$pdfData['has_data'])
-        <p class="muted">No submitted evaluations for this period.</p>
+        <p class="muted">{{ __('reports.no_submitted_period') }}</p>
     @else
         @if(count($pdfData['shared_questions']) > 0)
-            <h2>Shared questions</h2>
-            <p class="small">Answered by multiple evaluators; each column shows one evaluator's response.</p>
+            <h2>{{ __('reports.shared_questions') }}</h2>
+            <p class="small">{{ __('reports.shared_help') }}</p>
             <table>
                 <thead>
                     <tr>
-                        <th class="question">Question</th>
+                        <th class="question">{{ __('evaluations.question') }}</th>
                         @foreach($pdfData['evaluators'] as $evaluator)
                             <th class="center">
                                 {{ $evaluator['name'] }}<br>
                                 <span class="small">{{ $evaluator['role'] }}</span>
                             </th>
                         @endforeach
-                        <th class="right">Average</th>
+                        <th class="right">{{ __('reports.average') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -85,12 +85,12 @@
         @endif
 
         @if(count($pdfData['private_questions']) > 0)
-            <h2>Private questions</h2>
-            <p class="small">Visible to a single evaluator role; only that evaluator's column contains a value.</p>
+            <h2>{{ __('reports.private_questions') }}</h2>
+            <p class="small">{{ __('reports.private_help') }}</p>
             <table>
                 <thead>
                     <tr>
-                        <th class="question">Question</th>
+                        <th class="question">{{ __('evaluations.question') }}</th>
                         @foreach($pdfData['evaluators'] as $evaluator)
                             <th class="center">
                                 {{ $evaluator['name'] }}<br>
@@ -107,7 +107,7 @@
                                 @if($row['category'])
                                     <br><span class="small">{{ $row['category'] }}</span>
                                 @endif
-                                <br><span class="badge">Private</span>
+                                <br><span class="badge">{{ \App\Support\LocaleHelper::enum('visibility', 'private') }}</span>
                             </td>
                             @foreach($pdfData['evaluators'] as $evaluator)
                                 <td class="center">
@@ -125,20 +125,20 @@
         @endif
 
         @if(count($pdfData['derived_metrics']) > 0)
-            <h2>Derived metrics</h2>
+            <h2>{{ __('reports.derived_metrics') }}</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>Metric</th>
-                        <th>Operation</th>
-                        <th class="right">Result</th>
+                        <th>{{ __('reports.metric') }}</th>
+                        <th>{{ __('reports.operation') }}</th>
+                        <th class="right">{{ __('reports.result') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($pdfData['derived_metrics'] as $metric)
                         <tr>
                             <td>{{ $metric['name'] }}</td>
-                            <td>{{ ucfirst($metric['operation']) }}</td>
+                            <td>{{ \App\Support\LocaleHelper::enum('metric_operation', $metric['operation']) }}</td>
                             <td class="right">
                                 @if(!empty($metric['letter_grade']))
                                     <strong>{{ $metric['letter_grade'] }}</strong>
