@@ -16,7 +16,7 @@ class CommitteeEvaluationSyncService
      */
     public function syncTeachingStaffToLocalCommittees(StaffMember $staff): int
     {
-        if (! $staff->is_teaching_staff || ! $staff->is_active || ! $staff->department_id) {
+        if (! $this->shouldBeLocalEvaluatee($staff)) {
             return 0;
         }
 
@@ -35,6 +35,58 @@ class CommitteeEvaluationSyncService
         return $created;
     }
 
+    /**
+     * Remove pending evaluations for this staff member on local committees in their department.
+     */
+    public function removeStaffFromLocalCommitteeEvaluations(StaffMember $staff): int
+    {
+        if (! $staff->department_id) {
+            return 0;
+        }
+
+        $committeeIds = Committee::query()
+            ->where('type', Committee::TYPE_LOCAL)
+            ->where('department_id', $staff->department_id)
+            ->where('is_active', true)
+            ->pluck('id');
+
+        if ($committeeIds->isEmpty()) {
+            return 0;
+        }
+
+        return Evaluation::query()
+            ->where('evaluatee_staff_id', $staff->id)
+            ->whereIn('committee_id', $committeeIds)
+            ->delete();
+    }
+
+    /**
+     * After create/update: add or remove local committee evaluations as appropriate.
+     *
+     * @return array{created: int, removed: int}
+     */
+    public function reconcileLocalEvaluationsForStaff(StaffMember $staff): array
+    {
+        $removed = $this->removeStaffFromLocalCommitteeEvaluations($staff);
+
+        $created = 0;
+        if ($this->shouldBeLocalEvaluatee($staff)) {
+            $created = $this->syncTeachingStaffToLocalCommittees($staff);
+        }
+
+        return ['created' => $created, 'removed' => $removed];
+    }
+
+    /**
+     * Remove all evaluations where this staff member is the evaluatee (any committee).
+     */
+    public function removeAllEvaluationsForEvaluatee(StaffMember $staff): int
+    {
+        return Evaluation::query()
+            ->where('evaluatee_staff_id', $staff->id)
+            ->delete();
+    }
+
     public function syncStaffToCommittee(Committee $committee, StaffMember $staff): int
     {
         if (! $committee->isLocal() || ! $committee->evaluation_form_id) {
@@ -45,11 +97,7 @@ class CommitteeEvaluationSyncService
             return 0;
         }
 
-        if (! $staff->is_teaching_staff || ! $staff->is_active) {
-            return 0;
-        }
-
-        if (LocalCommitteeEvaluateeResolver::isExcluded($staff, (int) $committee->department_id)) {
+        if (! $this->shouldBeLocalEvaluatee($staff)) {
             return 0;
         }
 
@@ -97,5 +145,14 @@ class CommitteeEvaluationSyncService
         }
 
         return $created;
+    }
+
+    private function shouldBeLocalEvaluatee(StaffMember $staff): bool
+    {
+        if (! $staff->is_teaching_staff || ! $staff->is_active || ! $staff->department_id) {
+            return false;
+        }
+
+        return ! LocalCommitteeEvaluateeResolver::isExcluded($staff, (int) $staff->department_id);
     }
 }

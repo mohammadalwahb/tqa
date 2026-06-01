@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\College;
 use App\Models\Department;
 use App\Models\StaffMember;
+use App\Services\Committees\CommitteeService;
+use App\Services\Users\UserAccessSyncService;
 use App\Support\LocaleHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,6 +57,15 @@ class OrganizationalRoleController extends Controller
         }
 
         $department->update($data);
+
+        if (! empty($data['head_staff_id'])) {
+            $head = StaffMember::find($data['head_staff_id']);
+            if ($head) {
+                app(CommitteeService::class)->ensureUserForStaff($head);
+                app(UserAccessSyncService::class)->syncForStaff($head);
+            }
+        }
+
         return back()->with('success', __('messages.roles_updated', ['name' => LocaleHelper::departmentDisplayName($department)]));
     }
 }

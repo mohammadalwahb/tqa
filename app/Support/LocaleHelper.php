@@ -87,6 +87,7 @@ class LocaleHelper
             'Quality College Coordinator' => 'roles.quality_coordinator',
             'Local Committee Member' => 'roles.local_committee',
             'HD Committee Member' => 'roles.hd_committee',
+            'Department Head' => 'roles.department_head',
             default => null,
         };
 

@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Models\StaffMember;
 use App\Models\User;
+use App\Services\Users\UserAccessSyncService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
@@ -77,6 +78,12 @@ class GoogleAuthService
 
             if (! $user->is_active) {
                 throw new RuntimeException(__('login.account_disabled'));
+            }
+
+            app(UserAccessSyncService::class)->sync($user);
+
+            if (! app(UserAccessSyncService::class)->userMayAccessSystem($user)) {
+                throw new RuntimeException(__('login.not_registered'));
             }
 
             return $user;

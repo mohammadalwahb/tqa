@@ -126,16 +126,14 @@ class StaffMemberController extends Controller
 
         $this->syncOrganizationalRoles($orgRoles, $staff);
 
+        app(\App\Services\Committees\CommitteeService::class)->ensureUserForStaff($staff->fresh());
 
-
-        $evaluationsAdded = $committeeSync->syncTeachingStaffToLocalCommittees($staff->fresh());
-
-
+        $syncResult = $committeeSync->reconcileLocalEvaluationsForStaff($staff->fresh());
 
         $message = __('messages.staff_created');
 
-        if ($evaluationsAdded > 0) {
-            $message .= ' '.__('messages.staff_evaluations_added', ['count' => $evaluationsAdded]);
+        if ($syncResult['created'] > 0) {
+            $message .= ' '.__('messages.staff_evaluations_added', ['count' => $syncResult['created']]);
         }
 
         return redirect()->route('staff.index')->with('success', $message);
@@ -192,16 +190,17 @@ class StaffMemberController extends Controller
 
         $this->syncOrganizationalRoles($orgRoles, $staff->fresh());
 
+        app(\App\Services\Committees\CommitteeService::class)->ensureUserForStaff($staff->fresh());
 
-
-        $evaluationsAdded = $committeeSync->syncTeachingStaffToLocalCommittees($staff->fresh());
-
-
+        $syncResult = $committeeSync->reconcileLocalEvaluationsForStaff($staff->fresh());
 
         $message = __('messages.staff_updated');
 
-        if ($evaluationsAdded > 0) {
-            $message .= ' '.__('messages.staff_evaluations_added', ['count' => $evaluationsAdded]);
+        if ($syncResult['created'] > 0) {
+            $message .= ' '.__('messages.staff_evaluations_added', ['count' => $syncResult['created']]);
+        }
+        if ($syncResult['removed'] > 0) {
+            $message .= ' '.__('messages.staff_evaluations_removed', ['count' => $syncResult['removed']]);
         }
 
         return redirect()->route('staff.index')->with('success', $message);
@@ -216,13 +215,16 @@ class StaffMemberController extends Controller
 
         $this->authorize('delete', $staff);
 
-
+        $removed = app(CommitteeEvaluationSyncService::class)->removeAllEvaluationsForEvaluatee($staff);
 
         $staff->delete();
 
+        $message = __('messages.staff_deleted');
+        if ($removed > 0) {
+            $message .= ' '.__('messages.staff_evaluations_removed', ['count' => $removed]);
+        }
 
-
-        return redirect()->route('staff.index')->with('success', __('messages.staff_deleted'));
+        return redirect()->route('staff.index')->with('success', $message);
 
     }
 

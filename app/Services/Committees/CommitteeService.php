@@ -11,6 +11,7 @@ use App\Models\EvaluationPeriod;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Services\Evaluations\SuperAdminEvaluationAssignmentService;
+use App\Services\Users\UserAccessSyncService;
 use App\Support\LocaleHelper;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Support\Collection;
@@ -270,8 +271,8 @@ class CommitteeService
                 continue;
             }
             $user = User::find($m->user_id);
-            if ($user && ! $user->hasRole($roleName) && ! $user->isSuperAdmin()) {
-                $user->assignRole($roleName);
+            if ($user && ! $user->isSuperAdmin()) {
+                app(UserAccessSyncService::class)->sync($user);
             }
         }
     }
@@ -410,6 +411,8 @@ class CommitteeService
             $staff->user_id = $user->id;
             $staff->save();
         }
+
+        app(UserAccessSyncService::class)->sync($user);
 
         return $user;
     }

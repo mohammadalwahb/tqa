@@ -13,6 +13,7 @@ class RolePermissionSeeder extends Seeder
     public const ROLE_QUALITY_COORDINATOR  = 'Quality College Coordinator';
     public const ROLE_LOCAL_COMMITTEE      = 'Local Committee Member';
     public const ROLE_HD_COMMITTEE         = 'HD Committee Member';
+    public const ROLE_DEPARTMENT_HEAD      = 'Department Head';
 
     public function run(): void
     {
@@ -76,6 +77,11 @@ class RolePermissionSeeder extends Seeder
         $hd->syncPermissions([
             'dashboard.view',
             'evaluations.submit',
+            'evaluations.view_own',
+        ]);
+
+        $departmentHead = Role::firstOrCreate(['name' => self::ROLE_DEPARTMENT_HEAD, 'guard_name' => 'web']);
+        $departmentHead->syncPermissions([
             'evaluations.view_own',
         ]);
     }

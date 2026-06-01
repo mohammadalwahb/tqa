@@ -444,6 +444,7 @@
     "roles.quality_coordinator": "منسق جودة الكلية",
     "roles.local_committee": "عضو اللجنة المحلية",
     "roles.hd_committee": "عضو لجنة HD",
+    "roles.department_head": "رئيس القسم",
 
     "fields.employee_type": "نوع الموظف",
     "fields.qualification": "المؤهل",
@@ -460,6 +461,7 @@
     "messages.staff_updated": "تم تحديث عضو هيئة التدريس.",
     "messages.staff_deleted": "تم حذف عضو هيئة التدريس.",
     "messages.staff_evaluations_added": "تمت إضافة :count تقييم/تقييمات لجنة.",
+    "messages.staff_evaluations_removed": "تمت إزالة :count تعيين/تعيينات تقييم.",
     "messages.staff_purged": "تم حذف :count من أعضاء هيئة التدريس نهائياً ومسح بيانات التقييم المرتبطة.",
     "messages.staff_import": "انتهى الاستيراد. أُنشئ: :created، حُدّث: :updated.:issues",
     "messages.staff_import_issues": " المشكلات: :issues",
@@ -516,6 +518,7 @@
     "login.google_failed": "تعذّر المصادقة عبر Google. يُرجى المحاولة مرة أخرى.",
     "login.domain_not_allowed": "نطاق بريدك الإلكتروني غير مسموح به لتسجيل الدخول.",
     "login.account_disabled": "حسابك معطّل. يُرجى التواصل مع المسؤول.",
+    "login.not_registered": "حسابك غير مسجّل في نظام التقييم. تواصل مع منسق جودة الكلية.",
     "messages.committee_own_college_only": "يمكنك إنشاء لجان لكليتك فقط.",
     "messages.committee_members_must_differ": "يجب أن يكون عضوا القسم نفسه والقسم الآخر شخصين مختلفين.",
     "messages.committee_same_dept_required": "يجب أن ينتمي عضو نفس القسم إلى القسم المختار.",

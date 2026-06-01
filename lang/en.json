@@ -36,6 +36,7 @@
     "login.google_failed": "Could not authenticate with Google. Please try again.",
     "login.domain_not_allowed": "Your email domain is not allowed to sign in.",
     "login.account_disabled": "Your account is disabled. Please contact the administrator.",
+    "login.not_registered": "Your account is not registered in the evaluation system. Contact your Quality College Coordinator.",
 
     "common.sign_out": "Sign out",
     "common.whoops": "Whoops!",
@@ -447,6 +448,7 @@
     "roles.quality_coordinator": "Quality College Coordinator",
     "roles.local_committee": "Local Committee Member",
     "roles.hd_committee": "HD Committee Member",
+    "roles.department_head": "Department Head",
 
     "fields.employee_type": "Employee type",
     "fields.qualification": "Qualification",
@@ -463,6 +465,7 @@
     "messages.staff_updated": "Staff member updated.",
     "messages.staff_deleted": "Staff member deleted.",
     "messages.staff_evaluations_added": ":count committee evaluation(s) were added.",
+    "messages.staff_evaluations_removed": ":count evaluation assignment(s) were removed.",
     "messages.staff_purged": "Permanently deleted :count staff member(s) and cleared related evaluation data.",
     "messages.staff_import": "Import finished. Created: :created, Updated: :updated.:issues",
     "messages.staff_import_issues": " Issues: :issues",

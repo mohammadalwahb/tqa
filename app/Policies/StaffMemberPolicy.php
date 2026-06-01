@@ -29,7 +29,7 @@ class StaffMemberPolicy
 
     public function delete(User $user, StaffMember $staff): bool
     {
-        return $user->can('staff.manage');
+        return $user->can('staff.manage') || $this->managesStaff($user, $staff);
     }
 
     public function import(User $user): bool

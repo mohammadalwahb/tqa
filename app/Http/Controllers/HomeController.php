@@ -26,6 +26,10 @@ class HomeController extends Controller
             return redirect()->route('evaluations.index');
         }
 
+        if ($user->headedDepartment()) {
+            return redirect()->route('staff.index');
+        }
+
         if ($user->can('reports.view')) {
             return redirect()->route('reports.index');
         }

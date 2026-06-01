@@ -444,6 +444,7 @@
     "roles.quality_coordinator": "هاوڕێی کوالیتی کۆلێژ",
     "roles.local_committee": "ئەندامی کۆمیتەی ناوخۆیی",
     "roles.hd_committee": "ئەندامی کۆمیتەی HD",
+    "roles.department_head": "سەرۆکی بەش",
 
     "fields.employee_type": "جۆری کارمەند",
     "fields.qualification": "بڕوانامە",
@@ -460,6 +461,7 @@
     "messages.staff_updated": "ئەندامی ستاف نوێکرایەوە.",
     "messages.staff_deleted": "ئەندامی ستاف سڕایەوە.",
     "messages.staff_evaluations_added": ":count هەڵسەنگاندنی لیژنە زیادکرا.",
+    "messages.staff_evaluations_removed": ":count دانانی هەڵسەنگاندن لابرا.",
     "messages.staff_purged": ":count ئەندامی ستاف بە هەمیشەیی سڕایەوە و داتای هەڵسەنگاندنی پەیوەندیدار سڕایەوە.",
     "messages.staff_import": "هاوردە تەواوبوو. دروستکراو: :created، نوێکراو: :updated.:issues",
     "messages.staff_import_issues": " کێشەکان: :issues",
@@ -515,6 +517,7 @@
     "login.google_failed": "نەتوانرا لە ڕێگەی گووگڵەوە بچیتە ژوورەوە. تکایە دووبارە هەوڵ بدەرەوە.",
     "login.domain_not_allowed": "دۆمەینی ئیمەیڵەکەت ڕێگەپێدراو نییە بۆ چوونەژوورەوە.",
     "login.account_disabled": "هەژمارەکەت ناچالاکە. تکایە پەیوەندی بە بەڕێوەبەر بکە.",
+    "login.not_registered": "هەژمارەکەت لە سیستەمی هەڵسەنگاندندا تۆمار نەکراوە. پەیوەندی بە هاوڕێی کوالیتی کۆلێژ بکە.",
     "messages.committee_own_college_only": "تەنها دەتوانیت کۆمیتە بۆ کۆلێژی خۆت دروست بکەیت.",
     "messages.committee_members_must_differ": "ئەندامی هەمان بەش و ئەندامی بەشێکی تر دەبێت کەسانی جیاواز بن.",
     "messages.committee_same_dept_required": "ئەندامی هەمان بەش دەبێت سەر بە بەشی هەڵبژێردراو بێت.",
