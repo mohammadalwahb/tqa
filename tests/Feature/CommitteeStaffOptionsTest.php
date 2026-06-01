@@ -30,6 +30,15 @@ beforeEach(function () {
     $this->otherCollege = College::first();
     $this->otherDept = $this->otherCollege->departments()->first();
 
+    $this->deptHead = StaffMember::create([
+        'full_name_en' => 'Only Dept Head',
+        'email' => 'head.only@uoz.edu.krd',
+        'college_id' => $this->singleDeptCollege->id,
+        'department_id' => $this->onlyDept->id,
+        'is_active' => true,
+    ]);
+    $this->onlyDept->update(['head_staff_id' => $this->deptHead->id]);
+
     $this->staffInOnlyDept = StaffMember::create([
         'full_name_en' => 'Only Dept Staff',
         'email' => 'onlydept@uoz.edu.krd',

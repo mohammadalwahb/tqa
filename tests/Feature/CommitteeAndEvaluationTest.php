@@ -35,6 +35,16 @@ beforeEach(function () {
     ]);
     $this->coordinator->assignRole(RolePermissionSeeder::ROLE_QUALITY_COORDINATOR);
 
+    $this->deptHead = StaffMember::create([
+        'full_name_en'   => 'Department Head',
+        'email'          => 'head.depta@uoz.edu.krd',
+        'college_id'     => $this->college->id,
+        'department_id'  => $this->deptA->id,
+        'is_active'      => true,
+        'is_teaching_staff' => false,
+    ]);
+    $this->deptA->update(['head_staff_id' => $this->deptHead->id]);
+
     $this->staffSame1 = StaffMember::create([
         'full_name_en'   => 'Same Dept Member 1',
         'email'          => 'same1@uoz.edu.krd',
@@ -80,10 +90,11 @@ it('creates a local committee with the right structure', function () {
     ]);
 
     expect($committee->type)->toBe('local')
-        ->and($committee->members)->toHaveCount(3)
+        ->and($committee->members)->toHaveCount(4)
         ->and($committee->department_id)->toBe($this->deptA->id);
 
     expect($committee->members->where('member_role', CommitteeMember::ROLE_QUALITY_COLLEGE_COORDINATOR)->count())->toBe(1);
+    expect($committee->members->where('member_role', CommitteeMember::ROLE_HEAD_OF_DEPARTMENT)->count())->toBe(1);
     expect($committee->members->where('member_role', CommitteeMember::ROLE_SAME_DEPARTMENT_MEMBER)->count())->toBe(1);
     expect($committee->members->where('member_role', CommitteeMember::ROLE_OTHER_DEPARTMENT_MEMBER)->count())->toBe(1);
 

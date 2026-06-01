@@ -15,6 +15,7 @@ class CommitteeMember extends Model
     public const ROLE_SAME_DEPARTMENT_MEMBER      = 'same_department_member';
     public const ROLE_OTHER_DEPARTMENT_MEMBER     = 'other_department_member';
     public const ROLE_DEAN                        = 'dean';
+    public const ROLE_HEAD_OF_DEPARTMENT          = 'head_of_department';
     public const ROLE_HEAD_OTHER_DEPARTMENT       = 'head_other_department';
     public const ROLE_QUALITY_DEPARTMENT_COORD    = 'quality_department_coordinator';
 

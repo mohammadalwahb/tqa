@@ -18,6 +18,7 @@ return new class extends Migration
                 'same_department_member',
                 'other_department_member',
                 'dean',
+                'head_of_department',
                 'head_other_department',
                 'quality_department_coordinator',
             ]);

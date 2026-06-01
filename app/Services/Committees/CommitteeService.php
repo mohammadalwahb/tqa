@@ -25,9 +25,10 @@ class CommitteeService
      * Create a local committee for a department.
      *
      * Members rules:
-     * - Member #1: the Quality College Coordinator (user) - automatically.
-     * - Member #2: one staff member from the SAME department.
-     * - Member #3: one staff member from ANOTHER department of the same college.
+     * - Quality College Coordinator — automatically.
+     * - Head of Department for the chosen department — automatically (when assigned).
+     * - One staff member from the SAME department (not the head).
+     * - One staff member from ANOTHER department of the same college.
      *
      * @param array{
      *     department_id:int,
@@ -40,7 +41,7 @@ class CommitteeService
      */
     public function createLocalCommittee(User $coordinator, array $data): Committee
     {
-        $department = Department::with('college')->findOrFail($data['department_id']);
+        $department = Department::with(['college', 'head'])->findOrFail($data['department_id']);
         $period     = EvaluationPeriod::findOrFail($data['evaluation_period_id']);
         $form       = isset($data['evaluation_form_id']) && $data['evaluation_form_id']
             ? EvaluationForm::findOrFail($data['evaluation_form_id'])
@@ -57,6 +58,15 @@ class CommitteeService
             throw new RuntimeException(__('messages.committee_members_must_differ'));
         }
 
+        $head = $department->head;
+        if (! $department->head_staff_id || ! $head || ! $head->is_active) {
+            throw new RuntimeException(__('messages.committee_local_no_head'));
+        }
+
+        if (in_array((int) $head->id, [$sameDeptStaffId, $otherDeptStaffId], true)) {
+            throw new RuntimeException(__('messages.committee_head_cannot_be_selected'));
+        }
+
         $sameDeptStaff = StaffMember::findOrFail($sameDeptStaffId);
         if ((int) $sameDeptStaff->department_id !== (int) $department->id) {
             throw new RuntimeException(__('messages.committee_same_dept_required'));
@@ -65,7 +75,7 @@ class CommitteeService
         $otherDeptStaff = StaffMember::findOrFail($otherDeptStaffId);
         $this->assertValidOtherDepartmentMember($otherDeptStaff, $department);
 
-        return DB::transaction(function () use ($coordinator, $department, $period, $form, $sameDeptStaff, $otherDeptStaff, $data) {
+        return DB::transaction(function () use ($coordinator, $department, $period, $form, $head, $sameDeptStaff, $otherDeptStaff, $data) {
             $exists = Committee::where('type', Committee::TYPE_LOCAL)
                 ->where('department_id', $department->id)
                 ->where('evaluation_period_id', $period->id)
@@ -94,6 +104,13 @@ class CommitteeService
                 'member_role'          => CommitteeMember::ROLE_QUALITY_COLLEGE_COORDINATOR,
                 'source_department_id' => null,
             ]);
+
+            $this->addStaffMemberToCommittee(
+                $committee,
+                $head,
+                CommitteeMember::ROLE_HEAD_OF_DEPARTMENT,
+                $department->id,
+            );
 
             $this->addStaffMemberToCommittee(
                 $committee,

@@ -75,6 +75,7 @@
                     <div class="card-header"><h6 class="mb-0">{{ __('committees.members') }}</h6></div>
                     <div class="card-body">
                         <p class="text-muted small">{{ __('committees.local_members_help') }}</p>
+                        <p class="text-muted small mb-2"><i class="bi bi-info-circle"></i> {{ __('committees.local_head_auto') }}</p>
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label">{{ __('committees.same_dept_member') }} <span class="text-danger">*</span></label>
