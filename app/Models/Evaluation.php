@@ -75,4 +75,26 @@ class Evaluation extends Model
     {
         return $this->status === self::STATUS_SUBMITTED;
     }
+
+    /**
+     * Find an evaluation by its unique assignment keys, restoring soft-deleted rows
+     * instead of inserting duplicates that violate evaluations_unique.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @param  array<string, mixed>  $values
+     */
+    public static function firstOrRestoreOrCreate(array $attributes, array $values = []): self
+    {
+        $evaluation = static::withTrashed()->where($attributes)->first();
+
+        if ($evaluation) {
+            if ($evaluation->trashed()) {
+                $evaluation->restore();
+            }
+
+            return $evaluation;
+        }
+
+        return static::create(array_merge($attributes, $values));
+    }
 }

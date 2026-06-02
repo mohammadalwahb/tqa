@@ -139,6 +139,102 @@ it('syncs linked user email when staff email is updated before committee creatio
         ->and($headMember->displayEmail())->toBe('head-new@uoz.edu.krd');
 });
 
+it('preserves existing evaluations when staff details are updated', function () {
+    $committee = $this->service->createLocalCommittee($this->coordinator, [
+        'department_id' => $this->deptA->id,
+        'same_department_member_id' => $this->same->id,
+        'other_department_member_id' => $this->other->id,
+        'evaluation_period_id' => $this->period->id,
+    ]);
+
+    $this->sync->syncTeachingStaffToLocalCommittees($this->teaching);
+
+    $before = Evaluation::where('committee_id', $committee->id)
+        ->where('evaluatee_staff_id', $this->teaching->id)
+        ->pluck('id')
+        ->sort()
+        ->values();
+
+    expect($before)->not->toBeEmpty();
+
+    $this->teaching->update(['full_name_en' => 'Teacher Updated', 'email' => 'teacher-updated@uoz.edu.krd']);
+    app(\App\Services\Committees\CommitteeService::class)->ensureUserForStaff($this->teaching->fresh());
+    $this->sync->reconcileLocalEvaluationsForStaff($this->teaching->fresh());
+
+    $after = Evaluation::where('committee_id', $committee->id)
+        ->where('evaluatee_staff_id', $this->teaching->id)
+        ->pluck('id')
+        ->sort()
+        ->values();
+
+    expect($after)->toEqual($before);
+});
+
+it('restores soft-deleted evaluations when teaching staff is reactivated', function () {
+    $committee = $this->service->createLocalCommittee($this->coordinator, [
+        'department_id' => $this->deptA->id,
+        'same_department_member_id' => $this->same->id,
+        'other_department_member_id' => $this->other->id,
+        'evaluation_period_id' => $this->period->id,
+    ]);
+
+    $this->sync->syncTeachingStaffToLocalCommittees($this->teaching);
+    $evaluationId = Evaluation::where('evaluatee_staff_id', $this->teaching->id)->value('id');
+
+    $this->teaching->update(['is_teaching_staff' => false]);
+    $this->sync->reconcileLocalEvaluationsForStaff($this->teaching->fresh());
+
+    expect(Evaluation::find($evaluationId))->toBeNull()
+        ->and(Evaluation::withTrashed()->find($evaluationId)?->trashed())->toBeTrue();
+
+    $this->teaching->update(['is_teaching_staff' => true]);
+    $this->sync->reconcileLocalEvaluationsForStaff($this->teaching->fresh());
+
+    expect(Evaluation::find($evaluationId))->not->toBeNull()
+        ->and(Evaluation::find($evaluationId)?->trashed())->toBeFalse();
+});
+
+it('preserves existing evaluations when staff profile is updated', function () {
+    $committee = $this->service->createLocalCommittee($this->coordinator, [
+        'department_id' => $this->deptA->id,
+        'same_department_member_id' => $this->same->id,
+        'other_department_member_id' => $this->other->id,
+        'evaluation_period_id' => $this->period->id,
+    ]);
+
+    $this->sync->syncTeachingStaffToLocalCommittees($this->teaching);
+
+    $evaluationIds = Evaluation::query()
+        ->where('evaluatee_staff_id', $this->teaching->id)
+        ->where('committee_id', $committee->id)
+        ->pluck('id');
+
+    expect($evaluationIds)->not->toBeEmpty();
+
+    $admin = \App\Models\User::role('Super Admin')->firstOrFail();
+    $employeeType = \App\Models\StaffLookupOption::query()
+        ->forField(\App\Enums\StaffLookupField::EmployeeType)
+        ->active()
+        ->value('name');
+
+    $this->actingAs($admin)->put(route('staff.update', $this->teaching), [
+        'full_name_en' => 'Teacher Updated',
+        'email' => $this->teaching->email,
+        'college_id' => $this->teaching->college_id,
+        'department_id' => $this->teaching->department_id,
+        'employee_type' => $employeeType,
+        'is_teaching_staff' => true,
+        'is_active' => true,
+    ])->assertRedirect(route('staff.index'));
+
+    expect(Evaluation::query()
+        ->whereIn('id', $evaluationIds)
+        ->count())->toBe($evaluationIds->count())
+        ->and(Evaluation::onlyTrashed()
+            ->where('evaluatee_staff_id', $this->teaching->id)
+            ->count())->toBe(0);
+});
+
 it('does not create local evaluations for the department head', function () {
     $committee = $this->service->createLocalCommittee($this->coordinator, [
         'department_id' => $this->deptA->id,

@@ -322,7 +322,7 @@ class CommitteeService
                 if ($staff->id === $member->staff_member_id) {
                     continue;
                 }
-                Evaluation::firstOrCreate(
+                Evaluation::firstOrRestoreOrCreate(
                     [
                         'committee_id'         => $committee->id,
                         'evaluator_user_id'    => $member->user_id,

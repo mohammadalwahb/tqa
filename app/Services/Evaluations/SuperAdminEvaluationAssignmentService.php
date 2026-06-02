@@ -145,7 +145,7 @@ class SuperAdminEvaluationAssignmentService
 
             $this->consolidateToSingleSuperAdminEvaluation($committee, $staff, $superAdminIds, $primaryAdmin);
 
-            $evaluation = Evaluation::firstOrCreate(
+            $evaluation = Evaluation::firstOrRestoreOrCreate(
                 [
                     'committee_id'         => $committee->id,
                     'evaluator_user_id'    => $primaryAdmin->id,

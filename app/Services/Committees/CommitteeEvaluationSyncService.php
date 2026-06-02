@@ -74,12 +74,13 @@ class CommitteeEvaluationSyncService
             $removed += $this->removeStaffFromDepartmentCommitteeEvaluations($staff, $previousDepartmentId);
         }
 
-        $removed += $this->removeStaffFromLocalCommitteeEvaluations($staff);
+        if (! $this->shouldBeLocalEvaluatee($staff)) {
+            $removed += $this->removeStaffFromLocalCommitteeEvaluations($staff);
 
-        $created = 0;
-        if ($this->shouldBeLocalEvaluatee($staff)) {
-            $created = $this->syncTeachingStaffToLocalCommittees($staff);
+            return ['created' => 0, 'removed' => $removed];
         }
+
+        $created = $this->syncTeachingStaffToLocalCommittees($staff);
 
         return ['created' => $created, 'removed' => $removed];
     }
@@ -134,7 +135,7 @@ class CommitteeEvaluationSyncService
                 continue;
             }
 
-            $evaluation = Evaluation::firstOrCreate(
+            $evaluation = Evaluation::firstOrRestoreOrCreate(
                 [
                     'committee_id'         => $committee->id,
                     'evaluator_user_id'    => $member->user_id,
