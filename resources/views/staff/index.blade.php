@@ -30,20 +30,23 @@
 <div class="card table-card">
     <div class="card-header">
         <h5 class="mb-0">{{ __('staff.title') }}</h5>
-        <form method="GET" class="d-flex gap-2">
+        <form method="GET" class="d-flex gap-2 align-items-center flex-wrap">
             @unless($departmentHeadMode ?? false)
-                <select name="college_id" class="form-select form-select-sm">
-                    <option value="">{{ __('common.all_colleges') }}</option>
-                    @foreach($colleges as $c)
-                        <option value="{{ $c->id }}" @selected(request('college_id') == $c->id)>{{ \App\Support\LocaleHelper::collegeDisplayName($c) }}</option>
-                    @endforeach
-                </select>
-                <select name="department_id" class="form-select form-select-sm">
-                    <option value="">{{ __('common.all_departments') }}</option>
-                    @foreach($departments as $d)
-                        <option value="{{ $d->id }}" @selected(request('department_id') == $d->id)>{{ \App\Support\LocaleHelper::departmentDisplayName($d) }}</option>
-                    @endforeach
-                </select>
+                <div class="d-flex gap-2" data-college-department-filter>
+                    <select name="college_id" data-college-select class="form-select form-select-sm">
+                        <option value="">{{ __('common.all_colleges') }}</option>
+                        @foreach($colleges as $c)
+                            <option value="{{ $c->id }}" @selected(request('college_id') == $c->id)>{{ \App\Support\LocaleHelper::collegeDisplayName($c) }}</option>
+                        @endforeach
+                    </select>
+                    <select name="department_id" data-department-select class="form-select form-select-sm">
+                        <option value="">{{ __('common.all_departments') }}</option>
+                        @foreach($departments as $d)
+                            <option value="{{ $d->id }}" data-college-id="{{ $d->college_id }}"
+                                @selected(request('department_id') == $d->id)>{{ \App\Support\LocaleHelper::departmentDisplayName($d) }}</option>
+                        @endforeach
+                    </select>
+                </div>
             @else
                 <span class="badge bg-primary-subtle text-primary-emphasis align-self-center">
                     {{ \App\Support\LocaleHelper::departmentDisplayName($headedDepartment) }}
@@ -175,4 +178,7 @@
     </div>
 </div>
 @endrole
+@unless($departmentHeadMode ?? false)
+    @include('partials.college-department-filter')
+@endunless
 @endsection

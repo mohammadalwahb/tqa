@@ -79,29 +79,35 @@
                         </div>
                     </div>
                 @endif
-                <div class="col-md-6 @if($departmentHeadMode ?? false) d-none @endif">
-                    <label class="form-label">{{ __('common.college') }} <span class="text-danger">{{ __('common.required_mark') }}</span></label>
-                    <select name="college_id" id="collegeSelect" class="form-select @error('college_id') is-invalid @enderror" @unless($departmentHeadMode ?? false) required @endunless>
-                        <option value="">{{ __('common.choose') }}</option>
-                        @foreach($colleges as $c)
-                            <option value="{{ $c->id }}" @selected(old('college_id', $staff->college_id) == $c->id)>{{ \App\Support\LocaleHelper::collegeDisplayName($c) }}</option>
-                        @endforeach
-                    </select>
-                    @error('college_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                @unless($departmentHeadMode ?? false)
+                <div class="col-12" data-college-department-filter>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ __('common.college') }} <span class="text-danger">{{ __('common.required_mark') }}</span></label>
+                            <select name="college_id" id="collegeSelect" data-college-select class="form-select @error('college_id') is-invalid @enderror" required>
+                                <option value="">{{ __('common.choose') }}</option>
+                                @foreach($colleges as $c)
+                                    <option value="{{ $c->id }}" @selected(old('college_id', $staff->college_id) == $c->id)>{{ \App\Support\LocaleHelper::collegeDisplayName($c) }}</option>
+                                @endforeach
+                            </select>
+                            @error('college_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ __('common.department') }} <span class="text-danger">{{ __('common.required_mark') }}</span></label>
+                            <select name="department_id" id="departmentSelect" data-department-select class="form-select @error('department_id') is-invalid @enderror" required>
+                                <option value="">{{ __('common.choose') }}</option>
+                                @foreach($departments as $d)
+                                    <option value="{{ $d->id }}" data-college-id="{{ $d->college_id }}"
+                                        @selected(old('department_id', $staff->department_id) == $d->id)>
+                                        {{ \App\Support\LocaleHelper::departmentDisplayName($d) }} ({{ \App\Support\LocaleHelper::collegeDisplayName($d->college) }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('department_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6 @if($departmentHeadMode ?? false) d-none @endif">
-                    <label class="form-label">{{ __('common.department') }} <span class="text-danger">{{ __('common.required_mark') }}</span></label>
-                    <select name="department_id" id="departmentSelect" class="form-select @error('department_id') is-invalid @enderror" @unless($departmentHeadMode ?? false) required @endunless>
-                        <option value="">{{ __('common.choose') }}</option>
-                        @foreach($departments as $d)
-                            <option value="{{ $d->id }}" data-college="{{ $d->college_id }}"
-                                @selected(old('department_id', $staff->department_id) == $d->id)>
-                                {{ \App\Support\LocaleHelper::departmentDisplayName($d) }} ({{ \App\Support\LocaleHelper::collegeDisplayName($d->college) }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('department_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
+                @endunless
                 @foreach(['qualification', 'academic_title', 'position'] as $field)
                 <div class="col-md-4">
                     <label class="form-label">{{ \App\Support\LocaleHelper::staffFieldLabel($field) }}</label>
@@ -142,26 +148,5 @@
     </div>
 </div>
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const college = document.getElementById('collegeSelect');
-        const dept    = document.getElementById('departmentSelect');
-        if (!college || !dept) return;
-        const options = Array.from(dept.options);
-
-        function filter() {
-            const cid = college.value;
-            options.forEach(o => {
-                if (!o.value) { o.hidden = false; return; }
-                o.hidden = cid && o.dataset.college !== cid;
-            });
-            if (dept.selectedOptions[0]?.hidden) dept.value = '';
-        }
-
-        college.addEventListener('change', filter);
-        filter();
-    });
-</script>
-@endpush
+@include('partials.college-department-filter')
 @endsection

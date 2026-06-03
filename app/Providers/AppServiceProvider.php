@@ -7,6 +7,7 @@ use App\Models\StaffMember;
 use App\Policies\EvaluationPolicy;
 use App\Policies\StaffMemberPolicy;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,6 +27,10 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::before(function ($user, $ability) {
             return $user->hasRole('Super Admin') ? true : null;
+        });
+
+        Blade::directive('pdfText', function (string $expression): string {
+            return "<?php echo \\App\\Support\\PdfTextHelper::present({$expression}); ?>";
         });
     }
 }

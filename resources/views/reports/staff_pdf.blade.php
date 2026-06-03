@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="{{ app()->getLocale() }}">
+<html lang="{{ app()->getLocale() }}" dir="{{ \App\Support\LocaleHelper::direction() }}">
 <head>
     <meta charset="UTF-8">
-    <title>{{ __('reports.staff_evaluation', ['name' => \App\Support\LocaleHelper::staffDisplayName($staff)]) }}</title>
+    <title>@pdfText(__('reports.staff_evaluation', ['name' => \App\Support\LocaleHelper::staffDisplayName($staff)]))</title>
+    @include('partials.pdf-styles')
     <style>
-        * { font-family: DejaVu Sans, sans-serif; }
-        body { font-size: 10px; color: #1f2937; }
         h1 { margin: 0 0 4px; font-size: 16px; color: #1d4ed8; }
         h2 { margin: 14px 0 6px; font-size: 12px; color: #1e3a8a; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; }
         .meta { color: #4b5563; margin-bottom: 10px; line-height: 1.5; }
         .overall { font-size: 14px; font-weight: bold; color: #1d4ed8; }
         table { width: 100%; border-collapse: collapse; margin-top: 6px; }
-        th, td { border: 1px solid #e5e7eb; padding: 4px 5px; text-align: left; vertical-align: top; }
+        th, td { border: 1px solid #e5e7eb; padding: 4px 5px; vertical-align: top; }
         th { background: #f1f5f9; font-size: 9px; }
         .right { text-align: right; }
         .center { text-align: center; }
@@ -21,45 +20,45 @@
         .badge { display: inline-block; padding: 1px 4px; border-radius: 3px; font-size: 8px; background: #e0e7ff; color: #1e3a8a; }
     </style>
 </head>
-<body>
-    <h1>{{ \App\Support\LocaleHelper::staffDisplayName($staff) }}</h1>
+<body class="ltr-table">
+    <h1>@pdfText(\App\Support\LocaleHelper::staffDisplayName($staff))</h1>
     <div class="meta">
-        {{ $staff->email }}<br>
-        {{ \App\Support\LocaleHelper::collegeDisplayName($staff->department?->college) }} · {{ \App\Support\LocaleHelper::departmentDisplayName($staff->department) }}<br>
-        {{ __('reports.period_label') }} <strong>{{ $period->name }}</strong>
+        @pdfText($staff->email)<br>
+        @pdfText(\App\Support\LocaleHelper::collegeDisplayName($staff->department?->college)) · @pdfText(\App\Support\LocaleHelper::departmentDisplayName($staff->department))<br>
+        @pdfText(__('reports.period_label')) <strong>@pdfText($period->name)</strong>
         ({{ $period->start_date->toDateString() }} → {{ $period->end_date->toDateString() }})<br>
-        {{ __('reports.generated') }} {{ now()->toDateTimeString() }}
+        @pdfText(__('reports.generated')) {{ now()->toDateTimeString() }}
         @if($pdfData['overall'] !== null)
-            <br><span class="overall">{{ __('reports.overall_score_short') }} {{ number_format((float) $pdfData['overall'], 2) }}</span>
+            <br><span class="overall">@pdfText(__('reports.overall_score_short')) {{ number_format((float) $pdfData['overall'], 2) }}</span>
         @endif
     </div>
 
     @if(!$pdfData['has_data'])
-        <p class="muted">{{ __('reports.no_submitted_period') }}</p>
+        <p class="muted">@pdfText(__('reports.no_submitted_period'))</p>
     @else
         @if(count($pdfData['shared_questions']) > 0)
-            <h2>{{ __('reports.shared_questions') }}</h2>
-            <p class="small">{{ __('reports.shared_help') }}</p>
+            <h2>@pdfText(__('reports.shared_questions'))</h2>
+            <p class="small">@pdfText(__('reports.shared_help'))</p>
             <table>
                 <thead>
                     <tr>
-                        <th class="question">{{ __('evaluations.question') }}</th>
+                        <th class="question">@pdfText(__('evaluations.question'))</th>
                         @foreach($pdfData['evaluators'] as $evaluator)
                             <th class="center">
-                                {{ $evaluator['name'] }}<br>
-                                <span class="small">{{ $evaluator['role'] }}</span>
+                                @pdfText($evaluator['name'])<br>
+                                <span class="small">@pdfText($evaluator['role'])</span>
                             </th>
                         @endforeach
-                        <th class="right">{{ __('reports.average') }}</th>
+                        <th class="right">@pdfText(__('reports.average'))</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($pdfData['shared_questions'] as $row)
                         <tr>
                             <td class="question">
-                                {{ $row['text'] }}
+                                @pdfText($row['text'])
                                 @if($row['category'])
-                                    <br><span class="small">{{ $row['category'] }}</span>
+                                    <br><span class="small">@pdfText($row['category'])</span>
                                 @endif
                             </td>
                             @foreach($pdfData['evaluators'] as $evaluator)
@@ -85,16 +84,16 @@
         @endif
 
         @if(count($pdfData['private_questions']) > 0)
-            <h2>{{ __('reports.private_questions') }}</h2>
-            <p class="small">{{ __('reports.private_help') }}</p>
+            <h2>@pdfText(__('reports.private_questions'))</h2>
+            <p class="small">@pdfText(__('reports.private_help'))</p>
             <table>
                 <thead>
                     <tr>
-                        <th class="question">{{ __('evaluations.question') }}</th>
+                        <th class="question">@pdfText(__('evaluations.question'))</th>
                         @foreach($pdfData['evaluators'] as $evaluator)
                             <th class="center">
-                                {{ $evaluator['name'] }}<br>
-                                <span class="small">{{ $evaluator['role'] }}</span>
+                                @pdfText($evaluator['name'])<br>
+                                <span class="small">@pdfText($evaluator['role'])</span>
                             </th>
                         @endforeach
                     </tr>
@@ -103,11 +102,11 @@
                     @foreach($pdfData['private_questions'] as $row)
                         <tr>
                             <td class="question">
-                                {{ $row['text'] }}
+                                @pdfText($row['text'])
                                 @if($row['category'])
-                                    <br><span class="small">{{ $row['category'] }}</span>
+                                    <br><span class="small">@pdfText($row['category'])</span>
                                 @endif
-                                <br><span class="badge">{{ \App\Support\LocaleHelper::enum('visibility', 'private') }}</span>
+                                <br><span class="badge">@pdfText(\App\Support\LocaleHelper::enum('visibility', 'private'))</span>
                             </td>
                             @foreach($pdfData['evaluators'] as $evaluator)
                                 <td class="center">
@@ -125,25 +124,25 @@
         @endif
 
         @if(count($pdfData['derived_metrics']) > 0)
-            <h2>{{ __('reports.derived_metrics') }}</h2>
+            <h2>@pdfText(__('reports.derived_metrics'))</h2>
             <table>
                 <thead>
                     <tr>
-                        <th>{{ __('reports.metric') }}</th>
-                        <th>{{ __('reports.operation') }}</th>
-                        <th class="right">{{ __('reports.result') }}</th>
+                        <th>@pdfText(__('reports.metric'))</th>
+                        <th>@pdfText(__('reports.operation'))</th>
+                        <th class="right">@pdfText(__('reports.result'))</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($pdfData['derived_metrics'] as $metric)
                         <tr>
-                            <td>{{ $metric['name'] }}</td>
-                            <td>{{ \App\Support\LocaleHelper::enum('metric_operation', $metric['operation']) }}</td>
+                            <td>@pdfText($metric['name'])</td>
+                            <td>@pdfText(\App\Support\LocaleHelper::enum('metric_operation', $metric['operation']))</td>
                             <td class="right">
                                 @if(!empty($metric['letter_grade']))
                                     <strong>{{ $metric['letter_grade'] }}</strong>
                                     @if(!empty($metric['letter_range']))
-                                        <br><span class="small">{{ $metric['letter_range'] }}</span>
+                                        <br><span class="small">@pdfText($metric['letter_range'])</span>
                                     @endif
                                 @elseif($metric['value'] !== null)
                                     {{ number_format((float) $metric['value'], 2) }}
