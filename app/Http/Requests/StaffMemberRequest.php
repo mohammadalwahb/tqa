@@ -57,9 +57,7 @@ class StaffMemberRequest extends FormRequest
 
     {
 
-        $staffId = $this->routeStaff()?->id;
-
-
+        $staff = $this->routeStaff();
 
         $domains = collect(config('tqa.allowed_email_domains', []))
 
@@ -71,11 +69,9 @@ class StaffMemberRequest extends FormRequest
 
 
 
-        $staff = $this->routeStaff();
-
         $emailRules = [
             'required', 'email', 'max:191', $endsWith,
-            Rule::unique('staff_members', 'email')->ignore($staffId)->whereNull('deleted_at'),
+            Rule::unique('staff_members', 'email')->ignore($staff)->whereNull('deleted_at'),
             $this->userEmailAvailabilityRule($staff),
         ];
 
@@ -101,7 +97,7 @@ class StaffMemberRequest extends FormRequest
 
             'is_active'         => ['sometimes', 'boolean'],
 
-        ], app(StaffAttributeValidator::class)->rulesForStaffForm($staffId));
+        ], app(StaffAttributeValidator::class)->rulesForStaffForm($staff?->id));
 
 
 
@@ -189,6 +185,11 @@ class StaffMemberRequest extends FormRequest
 
     }
 
+    private function emailUnchangedForStaff(string $email, StaffMember $staff): bool
+    {
+        return mb_strtolower(trim($email)) === mb_strtolower(trim($staff->email));
+    }
+
     private function userEmailAvailabilityRule(?StaffMember $staff): \Closure
     {
         return function (string $attribute, mixed $value, \Closure $fail) use ($staff): void {
@@ -196,6 +197,10 @@ class StaffMemberRequest extends FormRequest
             $resolver = app(StaffUserEmailService::class);
 
             if ($staff) {
+                if ($this->emailUnchangedForStaff($email, $staff)) {
+                    return;
+                }
+
                 if ($resolver->emailTakenByAnotherAccount($email, $staff)) {
                     $fail(__('validation.unique', ['attribute' => 'email']));
                 }

@@ -111,6 +111,50 @@ it('clears soft-deleted user holding target email before updating linked account
         ->and(User::withTrashed()->where('email', 'media.editing@uoz.edu.krd')->count())->toBe(1);
 });
 
+it('allows updating college and department when email is unchanged', function () {
+    $staff = StaffMember::create([
+        'full_name_en' => 'Movable Staff',
+        'email' => 'movable@uoz.edu.krd',
+        'college_id' => $this->department->college_id,
+        'department_id' => $this->department->id,
+        'is_active' => true,
+        'is_teaching_staff' => true,
+        'employee_type' => $this->employeeType,
+    ]);
+
+    $otherDept = \App\Models\Department::query()
+        ->where('college_id', $this->department->college_id)
+        ->where('id', '!=', $this->department->id)
+        ->first();
+
+    if (! $otherDept) {
+        $otherDept = \App\Models\Department::create([
+            'college_id' => $this->department->college_id,
+            'name_en' => 'Second Dept',
+            'is_active' => true,
+        ]);
+    }
+
+    User::create([
+        'name' => 'Orphan Same Email',
+        'email' => 'movable@uoz.edu.krd',
+        'password' => bcrypt('secret'),
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($this->admin)->put(route('staff.update', $staff), [
+        'full_name_en' => 'Movable Staff',
+        'email' => 'movable@uoz.edu.krd',
+        'college_id' => $otherDept->college_id,
+        'department_id' => $otherDept->id,
+        'employee_type' => $this->employeeType,
+        'is_teaching_staff' => true,
+        'is_active' => true,
+    ])->assertRedirect(route('staff.index'));
+
+    expect($staff->fresh()->department_id)->toBe($otherDept->id);
+});
+
 it('reclaims duplicate user on ensureUserForStaff when syncing email', function () {
     $staff = StaffMember::create([
         'full_name_en' => 'Head',

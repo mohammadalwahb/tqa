@@ -17,7 +17,7 @@ class StaffUserEmailService
      */
     public function linkedUserIds(StaffMember $staff): array
     {
-        $ids = User::query()
+        $ids = User::withTrashed()
             ->where('staff_member_id', $staff->id)
             ->pluck('id');
 
@@ -56,7 +56,11 @@ class StaffUserEmailService
     public function resolveCanonicalUser(StaffMember $staff): ?User
     {
         if ($staff->user_id) {
-            return User::query()->whereKey($staff->user_id)->whereNull('deleted_at')->first();
+            $user = User::withTrashed()->whereKey($staff->user_id)->first();
+
+            if ($user && ! $user->trashed()) {
+                return $user;
+            }
         }
 
         return User::query()
