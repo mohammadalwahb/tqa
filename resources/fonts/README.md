@@ -10,3 +10,13 @@ curl -fsSL -o resources/fonts/NotoSansArabic-Regular.ttf \
 ```
 
 Licensed under the [SIL Open Font License](https://scripts.sil.org/OFL).
+
+## Arabic shaping (PDF)
+
+PDFs also require the Composer package `khaled.alshamaa/ar-php` (and PHP `ext-calendar`). On the server after deploy:
+
+```bash
+composer install --no-dev --optimize-autoloader
+```
+
+If `vendor/` is not uploaded with your code, this step is required or PDF export will fail / Arabic text will not shape correctly.

@@ -94,23 +94,58 @@ class EvaluationReportService
     {
         $reportQuestions = $this->reportQuestionColumns($period);
 
-        $staffWithEvaluations = StaffMember::query()
-            ->whereHas('evaluationsReceived', fn ($q) => $q->where('evaluation_period_id', $period->id))
-            ->with(['department.college', 'evaluationsReceived' => fn ($q) => $q->where('evaluation_period_id', $period->id)])
-            ->get();
+        $allEvaluationsByStaff = Evaluation::query()
+            ->where('evaluation_period_id', $period->id)
+            ->get()
+            ->groupBy('evaluatee_staff_id');
 
-        return $staffWithEvaluations->map(function (StaffMember $staff) use ($period, $reportQuestions) {
-            $evaluations = $staff->evaluationsReceived;
-            $required    = $evaluations->count();
-            $submitted   = $evaluations->where('status', Evaluation::STATUS_SUBMITTED);
-            $completed   = $submitted->count();
-            $percentage  = $required > 0 ? round(($completed / $required) * 100, 2) : 0.0;
+        if ($allEvaluationsByStaff->isEmpty()) {
+            return collect();
+        }
 
-            $analytics = $this->scores->staffAnalytics($staff, $period);
+        $submittedByStaff = Evaluation::query()
+            ->with([
+                'answers.question',
+                'committee.members.user.roles',
+                'form.categories',
+                'form.questions.category',
+                'form.questions.visibleToRoles',
+                'form.scoreMetrics.questions',
+                'form.scoreMetrics.grades',
+            ])
+            ->where('evaluation_period_id', $period->id)
+            ->where('status', Evaluation::STATUS_SUBMITTED)
+            ->get()
+            ->groupBy('evaluatee_staff_id');
 
-            $derivedMetrics = collect($analytics['extractions'] ?? [])
-                ->keyBy('metric_id')
-                ->all();
+        $staffMembers = StaffMember::query()
+            ->with(['department.college'])
+            ->whereIn('id', $allEvaluationsByStaff->keys())
+            ->get()
+            ->keyBy('id');
+
+        $textSummaries = $this->batchTextAnswerSummaries($period, $reportQuestions, $staffMembers->keys());
+
+        return $allEvaluationsByStaff->map(function ($evaluations, $staffId) use (
+            $period,
+            $reportQuestions,
+            $submittedByStaff,
+            $staffMembers,
+            $textSummaries,
+        ) {
+            $staff = $staffMembers->get((int) $staffId);
+            if (! $staff) {
+                return null;
+            }
+
+            $required   = $evaluations->count();
+            $completed  = $evaluations->where('status', Evaluation::STATUS_SUBMITTED)->count();
+            $percentage = $required > 0 ? round(($completed / $required) * 100, 2) : 0.0;
+
+            $submitted = $submittedByStaff->get((int) $staffId, collect());
+            $analytics = $submitted->isEmpty()
+                ? $this->scores->emptyAnalytics()
+                : $this->scores->staffAnalyticsFromEvaluations($submitted, $staff);
 
             return [
                 'staff'           => $staff,
@@ -118,10 +153,21 @@ class EvaluationReportService
                 'completed'       => $completed,
                 'percentage'      => $percentage,
                 'average'         => $analytics['overall'],
-                'derived_metrics' => $derivedMetrics,
-                'question_values' => $this->buildQuestionReportValues($staff, $period, $reportQuestions, $analytics),
+                'derived_metrics' => collect($analytics['extractions'] ?? [])
+                    ->keyBy('metric_id')
+                    ->all(),
+                'question_values' => $this->buildQuestionReportValues(
+                    $staff,
+                    $period,
+                    $reportQuestions,
+                    $analytics,
+                    $textSummaries,
+                ),
             ];
-        })->sortByDesc('percentage')->values();
+        })
+            ->filter()
+            ->sortByDesc('percentage')
+            ->values();
     }
 
     /**
@@ -290,6 +336,7 @@ class EvaluationReportService
         EvaluationPeriod $period,
         Collection $reportQuestions,
         array $analytics,
+        array $textSummaries = [],
     ): array {
         if ($reportQuestions->isEmpty()) {
             return [];
@@ -308,16 +355,63 @@ class EvaluationReportService
                     'text'    => null,
                 ];
             } else {
+                $summaryKey = "{$staff->id}:{$question->id}";
                 $values[$question->id] = [
                     'type'    => EvaluationQuestion::TYPE_TEXT,
                     'average' => null,
                     'count'   => 0,
-                    'text'    => $this->summarizeTextAnswers($staff, $period, $question->id),
+                    'text'    => $textSummaries[$summaryKey]
+                        ?? $this->summarizeTextAnswers($staff, $period, $question->id),
                 ];
             }
         }
 
         return $values;
+    }
+
+    /**
+     * @param  Collection<int, int|string>  $staffIds
+     * @return array<string, string>
+     */
+    private function batchTextAnswerSummaries(
+        EvaluationPeriod $period,
+        Collection $reportQuestions,
+        Collection $staffIds,
+    ): array {
+        $textQuestionIds = $reportQuestions
+            ->filter(fn (EvaluationQuestion $question) => ! $question->isScorable())
+            ->pluck('id');
+
+        if ($textQuestionIds->isEmpty() || $staffIds->isEmpty()) {
+            return [];
+        }
+
+        $summaries = [];
+
+        EvaluationAnswer::query()
+            ->select([
+                'evaluation_answers.evaluation_question_id',
+                'evaluation_answers.text_value',
+                'evaluations.evaluatee_staff_id',
+            ])
+            ->join('evaluations', 'evaluations.id', '=', 'evaluation_answers.evaluation_id')
+            ->whereIn('evaluation_answers.evaluation_question_id', $textQuestionIds)
+            ->whereIn('evaluations.evaluatee_staff_id', $staffIds)
+            ->where('evaluations.evaluation_period_id', $period->id)
+            ->where('evaluations.status', Evaluation::STATUS_SUBMITTED)
+            ->whereNotNull('evaluation_answers.text_value')
+            ->where('evaluation_answers.text_value', '!=', '')
+            ->orderBy('evaluation_answers.id')
+            ->chunk(500, function ($rows) use (&$summaries) {
+                foreach ($rows as $row) {
+                    $key = "{$row->evaluatee_staff_id}:{$row->evaluation_question_id}";
+                    if (! isset($summaries[$key])) {
+                        $summaries[$key] = Str::limit($row->text_value, 120);
+                    }
+                }
+            });
+
+        return $summaries;
     }
 
     /**

@@ -61,20 +61,20 @@ class EvaluationScoreCalculator
     public function staffAnalytics(StaffMember $staff, EvaluationPeriod $period): array
     {
         $evaluations = Evaluation::query()
-            ->with([
-                'answers.question',
-                'committee.members.user.roles',
-                'form.categories',
-                'form.questions.category',
-                'form.questions.visibleToRoles',
-                'form.scoreMetrics.questions',
-                'form.scoreMetrics.grades',
-            ])
+            ->with($this->analyticsRelations())
             ->where('evaluatee_staff_id', $staff->id)
             ->where('evaluation_period_id', $period->id)
             ->where('status', Evaluation::STATUS_SUBMITTED)
             ->get();
 
+        return $this->staffAnalyticsFromEvaluations($evaluations, $staff);
+    }
+
+    /**
+     * @param  Collection<int, Evaluation>  $evaluations  Submitted evaluations for one staff member.
+     */
+    public function staffAnalyticsFromEvaluations(Collection $evaluations, StaffMember $staff): array
+    {
         if ($evaluations->isEmpty()) {
             return $this->emptyAnalytics();
         }
@@ -390,13 +390,29 @@ class EvaluationScoreCalculator
         return $evaluations->first()?->committee;
     }
 
-    private function emptyAnalytics(): array
+    public function emptyAnalytics(): array
     {
         return [
             'overall'     => null,
             'by_category' => [],
             'by_question' => [],
             'extractions' => [],
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function analyticsRelations(): array
+    {
+        return [
+            'answers.question',
+            'committee.members.user.roles',
+            'form.categories',
+            'form.questions.category',
+            'form.questions.visibleToRoles',
+            'form.scoreMetrics.questions',
+            'form.scoreMetrics.grades',
         ];
     }
 }

@@ -2,11 +2,11 @@
 
 namespace App\Support;
 
-use ArPHP\I18N\Arabic;
+use Throwable;
 
 class PdfTextHelper
 {
-    private static ?Arabic $glyphs = null;
+    private static ?object $glyphs = null;
 
     /**
      * Shape Arabic-script text and escape for DomPDF HTML output.
@@ -20,11 +20,25 @@ class PdfTextHelper
         }
 
         if (self::containsArabicScript($text)) {
-            self::$glyphs ??= new Arabic('Glyphs');
-            $text = self::$glyphs->utf8Glyphs($text);
+            $text = self::shapeArabicScript($text);
         }
 
         return htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    private static function shapeArabicScript(string $text): string
+    {
+        if (! class_exists(\ArPHP\I18N\Arabic::class)) {
+            return $text;
+        }
+
+        try {
+            self::$glyphs ??= new \ArPHP\I18N\Arabic('Glyphs');
+
+            return self::$glyphs->utf8Glyphs($text);
+        } catch (Throwable) {
+            return $text;
+        }
     }
 
     public static function containsArabicScript(string $text): bool
