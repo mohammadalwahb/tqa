@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}" dir="{{ \App\Support\LocaleHelper::direction() }}">
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta charset="UTF-8">
     <title>@pdfText(__('reports.staff_evaluation', ['name' => \App\Support\LocaleHelper::staffDisplayName($staff)]))</title>
     @include('partials.pdf-styles')

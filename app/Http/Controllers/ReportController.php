@@ -5,9 +5,8 @@ namespace App\Http\Controllers;
 use App\Exports\StaffEvaluationReportExport;
 use App\Models\EvaluationPeriod;
 use App\Models\StaffMember;
-use App\Services\Pdf\DomPdfFontRegistrar;
+use App\Services\Pdf\PdfDocumentBuilder;
 use App\Services\Reporting\EvaluationReportService;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
@@ -16,8 +15,10 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ReportController extends Controller
 {
-    public function __construct(private readonly EvaluationReportService $reports)
-    {
+    public function __construct(
+        private readonly EvaluationReportService $reports,
+        private readonly PdfDocumentBuilder $pdfBuilder,
+    ) {
     }
 
     public function index(Request $request): View
@@ -75,7 +76,7 @@ class ReportController extends Controller
         $derivedMetricColumns = $this->reports->reportDerivedMetricColumns($period);
         $reportQuestionColumns = $this->reports->reportQuestionColumns($period);
 
-        return $this->downloadPdf(
+        return $this->pdfBuilder->download(
             'reports.pdf',
             compact('period', 'progress', 'staffRows', 'derivedMetricColumns', 'reportQuestionColumns'),
             "tqa-report-{$period->id}.pdf",
@@ -96,7 +97,7 @@ class ReportController extends Controller
             $period->id,
         );
 
-        return $this->downloadPdf(
+        return $this->pdfBuilder->download(
             'reports.staff_pdf',
             compact('staff', 'period', 'pdfData'),
             $filename,
@@ -116,19 +117,6 @@ class ReportController extends Controller
             new StaffEvaluationReportExport($staffRows, $derivedMetricColumns, $reportQuestionColumns),
             "tqa-staff-report-{$period->id}.xlsx"
         );
-    }
-
-    /**
-     * @param  array<string, mixed>  $data
-     */
-    private function downloadPdf(string $view, array $data, string $filename): Response
-    {
-        DomPdfFontRegistrar::ensureFontMetricsInstalled();
-
-        $pdf = Pdf::loadView($view, $data);
-        DomPdfFontRegistrar::registerArabicFont($pdf->getDomPDF());
-
-        return $pdf->setPaper('a4', 'landscape')->download($filename);
     }
 
     private function resolvePeriod(Request $request): ?EvaluationPeriod
