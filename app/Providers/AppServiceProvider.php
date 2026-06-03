@@ -7,6 +7,7 @@ use App\Models\StaffMember;
 use App\Policies\EvaluationPolicy;
 use App\Policies\StaffMemberPolicy;
 use Illuminate\Pagination\Paginator;
+use App\Services\Pdf\DomPdfFontRegistrar;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -21,6 +22,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+        DomPdfFontRegistrar::ensureFontDirectories();
 
         Gate::policy(Evaluation::class, EvaluationPolicy::class);
         Gate::policy(StaffMember::class, StaffMemberPolicy::class);

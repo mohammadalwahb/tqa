@@ -1,0 +1,5 @@
+*
+!.gitignore
+!installed-fonts.json
+!noto_sans_arabic_*.ufm
+!noto_sans_arabic_*.ttf

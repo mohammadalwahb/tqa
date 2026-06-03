@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Evaluation;
 use App\Services\Evaluations\EvaluationSubmissionService;
-use App\Services\Evaluations\SuperAdminEvaluationAssignmentService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,15 +20,15 @@ class EvaluationController extends Controller
     {
         $user = $request->user();
 
-        if ($user->can('evaluations.view_all')) {
-            app(SuperAdminEvaluationAssignmentService::class)->syncAllActiveCommittees();
-        }
-
-        $query = Evaluation::with(['evaluatee.department', 'committee.department', 'period', 'evaluator'])
+        $query = Evaluation::with([
+                'evaluatee.department',
+                'committee.department',
+                'period',
+                'evaluator.roles',
+            ])
             ->orderByDesc('id');
 
         if ($user->can('evaluations.view_all')) {
-            // see them all (limited by college if applicable)
             if (! $user->isSuperAdmin() && $user->college_id) {
                 $query->whereHas('committee', fn ($q) => $q->where('college_id', $user->college_id));
             }
@@ -45,7 +44,7 @@ class EvaluationController extends Controller
             $query->where('evaluator_user_id', $user->id);
         }
 
-        $evaluations = $query->get();
+        $evaluations = $query->paginate(25)->withQueryString();
 
         return view('evaluations.index', compact('evaluations'));
     }

@@ -17,6 +17,8 @@ PDFs also require the Composer package `khaled.alshamaa/ar-php` (and PHP `ext-ca
 
 ```bash
 composer install --no-dev --optimize-autoloader
+php artisan pdf:install-fonts
+chmod -R 775 storage/fonts
 ```
 
-If `vendor/` is not uploaded with your code, this step is required or PDF export will fail / Arabic text will not shape correctly.
+DomPDF writes font metrics (`.ufm` files) under `storage/fonts/`. That directory must exist and be writable by the web server.

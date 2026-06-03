@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\StaffEvaluationReportExport;
 use App\Models\EvaluationPeriod;
 use App\Models\StaffMember;
+use App\Services\Pdf\DomPdfFontRegistrar;
 use App\Services\Reporting\EvaluationReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -74,10 +75,11 @@ class ReportController extends Controller
         $derivedMetricColumns = $this->reports->reportDerivedMetricColumns($period);
         $reportQuestionColumns = $this->reports->reportQuestionColumns($period);
 
-        $pdf = Pdf::loadView('reports.pdf', compact('period', 'progress', 'staffRows', 'derivedMetricColumns', 'reportQuestionColumns'))
-                  ->setPaper('a4', 'landscape');
-
-        return $pdf->download("tqa-report-{$period->id}.pdf");
+        return $this->downloadPdf(
+            'reports.pdf',
+            compact('period', 'progress', 'staffRows', 'derivedMetricColumns', 'reportQuestionColumns'),
+            "tqa-report-{$period->id}.pdf",
+        );
     }
 
     public function exportStaffPdf(Request $request, StaffMember $staff): Response
@@ -94,10 +96,11 @@ class ReportController extends Controller
             $period->id,
         );
 
-        $pdf = Pdf::loadView('reports.staff_pdf', compact('staff', 'period', 'pdfData'))
-            ->setPaper('a4', 'landscape');
-
-        return $pdf->download($filename);
+        return $this->downloadPdf(
+            'reports.staff_pdf',
+            compact('staff', 'period', 'pdfData'),
+            $filename,
+        );
     }
 
     public function exportExcel(Request $request): BinaryFileResponse
@@ -115,11 +118,25 @@ class ReportController extends Controller
         );
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function downloadPdf(string $view, array $data, string $filename): Response
+    {
+        DomPdfFontRegistrar::ensureFontMetricsInstalled();
+
+        $pdf = Pdf::loadView($view, $data);
+        DomPdfFontRegistrar::registerArabicFont($pdf->getDomPDF());
+
+        return $pdf->setPaper('a4', 'landscape')->download($filename);
+    }
+
     private function resolvePeriod(Request $request): ?EvaluationPeriod
     {
         if ($request->filled('period_id')) {
             return EvaluationPeriod::find($request->period_id);
         }
+
         return EvaluationPeriod::currentlyOpen() ?? EvaluationPeriod::orderByDesc('start_date')->first();
     }
 }

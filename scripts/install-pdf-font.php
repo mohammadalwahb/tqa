@@ -1,0 +1,13 @@
+<?php
+
+use App\Services\Pdf\DomPdfFontRegistrar;
+use Illuminate\Contracts\Console\Kernel;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$app = require __DIR__ . '/../bootstrap/app.php';
+$app->make(Kernel::class)->bootstrap();
+
+DomPdfFontRegistrar::installArabicFontMetrics();
+
+echo "Arabic font metrics installed in: " . storage_path('fonts') . PHP_EOL;

@@ -1,19 +1,12 @@
 @php
+    use App\Services\Pdf\DomPdfFontRegistrar;
+
     $rtl = \App\Support\LocaleHelper::isRtl();
-    $arabicFont = \App\Support\PdfTextHelper::arabicFontPath();
-    $arabicFontUrl = $arabicFont ? 'file://' . str_replace('\\', '/', $arabicFont) : null;
+    $useArabicFont = $rtl && DomPdfFontRegistrar::arabicFontSourcePath() !== null;
 @endphp
 <style>
-    @if($arabicFontUrl)
-    @font-face {
-        font-family: 'Noto Sans Arabic';
-        font-style: normal;
-        font-weight: normal;
-        src: url('{{ $arabicFontUrl }}') format('truetype');
-    }
-    @endif
     * {
-        font-family: {{ $rtl && $arabicFontUrl ? "'Noto Sans Arabic', 'DejaVu Sans', sans-serif" : "'DejaVu Sans', sans-serif" }};
+        font-family: {{ $useArabicFont ? "'" . DomPdfFontRegistrar::ARABIC_FONT_FAMILY . "', 'DejaVu Sans', sans-serif" : "'DejaVu Sans', sans-serif" }};
     }
     body {
         font-size: 10px;
