@@ -378,6 +378,7 @@
     "reports.completion_of": ":completed لە :required هەڵسەنگاندن نێردراوە",
     "reports.no_evaluations_period": "هێشتا هیچ هەڵسەنگاندنێک نییە بۆ ماوەی هەڵبژێردراو.",
     "reports.per_staff_completion": "تەواوبوونی هەڵسەنگاندن بۆ هەر ستاف",
+    "reports.derived_metrics_in_export": "پێوەرە دەرهێنراوەکانی نمرە لە هەناردەی PDF و Excelدا دەردەکەون.",
     "reports.required": "پێویست",
     "reports.completed": "تەواو",
     "reports.completion_pct": "ڕێژەی تەواوبوون %",

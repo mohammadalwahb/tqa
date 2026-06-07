@@ -25,8 +25,8 @@ class ReportController extends Controller
     {
         $period = $this->resolvePeriod($request);
         $progress = $period ? $this->reports->universityProgress($period) : null;
-        $staffRows = $period ? $this->reports->staffProgress($period) : collect();
-        $derivedMetricColumns = $period ? $this->reports->reportDerivedMetricColumns($period) : collect();
+        $staffRows = $period ? $this->reports->staffProgressSummary($period) : collect();
+        $derivedMetricColumns = collect();
         $reportQuestionColumns = $period ? $this->reports->reportQuestionColumns($period) : collect();
 
         return view('reports.index', [

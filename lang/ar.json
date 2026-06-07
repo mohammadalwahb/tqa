@@ -378,6 +378,7 @@
     "reports.completion_of": ":completed من :required تقييمات مُرسَلة",
     "reports.no_evaluations_period": "لا توجد تقييمات بعد للفترة المحددة.",
     "reports.per_staff_completion": "إكمال التقييم لكل موظف",
+    "reports.derived_metrics_in_export": "مقاييس الدرجات المشتقة متوفرة في تصدير PDF و Excel.",
     "reports.required": "مطلوب",
     "reports.completed": "مكتمل",
     "reports.completion_pct": "نسبة الإكمال %",

@@ -57,6 +57,9 @@
 <div class="card table-card">
     <div class="card-header">
         <h6 class="mb-0">{{ __('reports.per_staff_completion') }}</h6>
+        @if($period)
+            <small class="text-muted">{{ __('reports.derived_metrics_in_export') }}</small>
+        @endif
     </div>
     <div class="card-body">
         <table class="table align-middle datatable">
@@ -73,9 +76,6 @@
                         <th class="text-end" title="{{ $questionCol->text }}">
                             {{ \Illuminate\Support\Str::limit($questionCol->text, 35) }}
                         </th>
-                    @endforeach
-                    @foreach($derivedMetricColumns as $metricCol)
-                        <th class="text-end">{{ $metricCol->name }}</th>
                     @endforeach
                     <th class="text-end">{{ __('reports.details') }}</th>
                 </tr>
@@ -102,11 +102,6 @@
                             @include('reports.partials.question_report_cell', ['row' => $row, 'questionColumn' => $questionCol])
                         </td>
                     @endforeach
-                    @foreach($derivedMetricColumns as $metricCol)
-                        <td class="text-end">
-                            @include('reports.partials.derived_metric_cell', ['row' => $row, 'metricColumn' => $metricCol])
-                        </td>
-                    @endforeach
                     <td class="text-end text-nowrap">
                         @if($period && $row['completed'] > 0)
                             <a href="{{ route('reports.staff.export.pdf', ['staff' => $row['staff']->id, 'period_id' => $period->id]) }}"
@@ -121,7 +116,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="{{ 8 + $reportQuestionColumns->count() + $derivedMetricColumns->count() }}" class="text-muted text-center py-4">{{ __('reports.no_data_period') }}</td></tr>
+                <tr><td colspan="{{ 8 + $reportQuestionColumns->count() }}" class="text-muted text-center py-4">{{ __('reports.no_data_period') }}</td></tr>
             @endforelse
             </tbody>
         </table>

@@ -10,6 +10,7 @@ use App\Models\EvaluationScoreMetric;
 use App\Models\StaffMember;
 use App\Services\Evaluations\EvaluationScoreCalculator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class EvaluationReportService
@@ -37,6 +38,156 @@ class EvaluationReportService
             'percentage' => $percentage,
             'period_id'  => $period->id,
         ];
+    }
+
+    public static function summaryCacheKey(EvaluationPeriod|int $period): string
+    {
+        $id = $period instanceof EvaluationPeriod ? $period->id : $period;
+
+        return "report:period:{$id}:staff_summary";
+    }
+
+    public static function fullProgressCacheKey(EvaluationPeriod|int $period): string
+    {
+        $id = $period instanceof EvaluationPeriod ? $period->id : $period;
+
+        return "report:period:{$id}:staff_progress";
+    }
+
+    public static function forgetPeriodCaches(EvaluationPeriod|int $period): void
+    {
+        Cache::forget(self::summaryCacheKey($period));
+        Cache::forget(self::fullProgressCacheKey($period));
+    }
+
+    /**
+     * Lightweight staff completion rows for the reports index (SQL aggregates, no per-staff analytics).
+     *
+     * @return Collection<int, array{staff:StaffMember, required:int, completed:int, percentage:float, average:float|null, question_values:array<int, array<string, mixed>>}>
+     */
+    public function staffProgressSummary(EvaluationPeriod $period): Collection
+    {
+        return Cache::remember(
+            self::summaryCacheKey($period),
+            now()->addMinutes(10),
+            fn () => $this->buildStaffProgressSummary($period),
+        );
+    }
+
+    /**
+     * @return Collection<int, array{staff:StaffMember, required:int, completed:int, percentage:float, average:float|null, question_values:array<int, array<string, mixed>>}>
+     */
+    private function buildStaffProgressSummary(EvaluationPeriod $period): Collection
+    {
+        $stats = Evaluation::query()
+            ->where('evaluation_period_id', $period->id)
+            ->selectRaw('evaluatee_staff_id')
+            ->selectRaw('COUNT(*) as required')
+            ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed', [Evaluation::STATUS_SUBMITTED])
+            ->selectRaw('AVG(CASE WHEN status = ? THEN total_score ELSE NULL END) as average', [Evaluation::STATUS_SUBMITTED])
+            ->groupBy('evaluatee_staff_id')
+            ->get()
+            ->keyBy('evaluatee_staff_id');
+
+        if ($stats->isEmpty()) {
+            return collect();
+        }
+
+        $staffMembers = StaffMember::with(['department.college'])
+            ->whereIn('id', $stats->keys())
+            ->orderBy('full_name_en')
+            ->get();
+
+        $reportQuestions = $this->reportQuestionColumns($period);
+        $scorableIds     = $reportQuestions->filter(fn (EvaluationQuestion $q) => $q->isScorable())->pluck('id');
+
+        $scorableAverages = $this->batchScorableQuestionAverages($period, $scorableIds);
+        $textSummaries    = $this->batchTextAnswerSummaries($period, $reportQuestions, $stats->keys());
+
+        return $staffMembers->map(function (StaffMember $staff) use ($stats, $reportQuestions, $scorableAverages, $textSummaries) {
+            $stat       = $stats[$staff->id];
+            $required   = (int) $stat->required;
+            $completed  = (int) $stat->completed;
+            $percentage = $required > 0 ? round(($completed / $required) * 100, 1) : 0.0;
+
+            return [
+                'staff'           => $staff,
+                'required'        => $required,
+                'completed'       => $completed,
+                'percentage'      => $percentage,
+                'average'         => $stat->average !== null ? round((float) $stat->average, 2) : null,
+                'question_values' => $this->mapQuestionValuesFromBatch(
+                    $staff->id,
+                    $reportQuestions,
+                    $scorableAverages,
+                    $textSummaries,
+                ),
+            ];
+        })->values();
+    }
+
+    /**
+     * @param  Collection<int, int|string>  $questionIds
+     * @return array<int, array<int, float>>
+     */
+    private function batchScorableQuestionAverages(EvaluationPeriod $period, Collection $questionIds): array
+    {
+        if ($questionIds->isEmpty()) {
+            return [];
+        }
+
+        $rows = EvaluationAnswer::query()
+            ->join('evaluations', 'evaluations.id', '=', 'evaluation_answers.evaluation_id')
+            ->where('evaluations.evaluation_period_id', $period->id)
+            ->where('evaluations.status', Evaluation::STATUS_SUBMITTED)
+            ->whereIn('evaluation_answers.evaluation_question_id', $questionIds)
+            ->selectRaw('evaluations.evaluatee_staff_id as staff_id')
+            ->selectRaw('evaluation_answers.evaluation_question_id as question_id')
+            ->selectRaw(
+                'AVG(CASE WHEN evaluation_answers.rating_value IS NOT NULL THEN evaluation_answers.rating_value ELSE evaluation_answers.number_value END) as avg_value'
+            )
+            ->groupBy('evaluations.evaluatee_staff_id', 'evaluation_answers.evaluation_question_id')
+            ->get();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int) $row->staff_id][(int) $row->question_id] = round((float) $row->avg_value, 2);
+        }
+
+        return $map;
+    }
+
+    /**
+     * @param  Collection<int, EvaluationQuestion>  $reportQuestions
+     * @param  array<int, array<int, float>>  $scorableAverages
+     * @param  array<int, array<int, string>>  $textSummaries
+     * @return array<int, array<string, mixed>>
+     */
+    private function mapQuestionValuesFromBatch(
+        int $staffId,
+        Collection $reportQuestions,
+        array $scorableAverages,
+        array $textSummaries,
+    ): array {
+        $values = [];
+
+        foreach ($reportQuestions as $question) {
+            if (! $question->isScorable()) {
+                $values[$question->id] = [
+                    'type' => 'text',
+                    'text' => $textSummaries["{$staffId}:{$question->id}"] ?? null,
+                ];
+
+                continue;
+            }
+
+            $values[$question->id] = [
+                'type'    => $question->type,
+                'average' => $scorableAverages[$staffId][$question->id] ?? null,
+            ];
+        }
+
+        return $values;
     }
 
     /**
@@ -91,6 +242,18 @@ class EvaluationReportService
      * }>
      */
     public function staffProgress(EvaluationPeriod $period): Collection
+    {
+        return Cache::remember(
+            self::fullProgressCacheKey($period),
+            now()->addMinutes(10),
+            fn () => $this->buildStaffProgress($period),
+        );
+    }
+
+    /**
+     * @return Collection<int, array{staff:StaffMember, required:int, completed:int, percentage:float, average:float|null, question_values:array<int, array<string, mixed>>, derived_metrics:array<int, array<string, mixed>>}>
+     */
+    private function buildStaffProgress(EvaluationPeriod $period): Collection
     {
         $reportQuestions = $this->reportQuestionColumns($period);
 

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Evaluation;
+use App\Models\EvaluationPeriod;
 use App\Services\Evaluations\EvaluationSubmissionService;
+use App\Services\Reporting\EvaluationReportService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,7 +46,7 @@ class EvaluationController extends Controller
             $query->where('evaluator_user_id', $user->id);
         }
 
-        $evaluations = $query->paginate(25)->withQueryString();
+        $evaluations = $query->get();
 
         return view('evaluations.index', compact('evaluations'));
     }

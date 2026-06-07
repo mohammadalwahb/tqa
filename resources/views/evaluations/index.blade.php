@@ -64,7 +64,6 @@
             @endforelse
             </tbody>
         </table>
-        {{ $evaluations->links() }}
     </div>
 </div>
 @endsection
