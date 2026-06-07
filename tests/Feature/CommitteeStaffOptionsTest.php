@@ -14,62 +14,53 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->seed(\Database\Seeders\DatabaseSeeder::class);
 
-    $this->singleDeptCollege = College::create([
-        'name_en' => 'Single Dept College',
-        'name_ku' => 'کۆلێژی یەک بەش',
-        'is_active' => true,
-    ]);
+    $this->college = College::first();
+    $this->department = $this->college->departments()->first();
+    $this->otherDeptInCollege = $this->college->departments()->where('id', '!=', $this->department->id)->first();
 
-    $this->onlyDept = Department::create([
-        'college_id' => $this->singleDeptCollege->id,
-        'name_en' => 'Only Department',
-        'name_ku' => 'تەنها بەش',
-        'is_active' => true,
-    ]);
-
-    $this->otherCollege = College::first();
-    $this->otherDept = $this->otherCollege->departments()->first();
+    $this->otherCollege = College::query()->where('id', '!=', $this->college->id)->firstOrFail();
+    $this->otherCollegeDept = $this->otherCollege->departments()->first();
 
     $this->deptHead = StaffMember::create([
-        'full_name_en' => 'Only Dept Head',
-        'email' => 'head.only@uoz.edu.krd',
-        'college_id' => $this->singleDeptCollege->id,
-        'department_id' => $this->onlyDept->id,
+        'full_name_en' => 'Dept Head',
+        'email' => 'head.multi@uoz.edu.krd',
+        'college_id' => $this->college->id,
+        'department_id' => $this->department->id,
         'is_active' => true,
     ]);
-    $this->onlyDept->update(['head_staff_id' => $this->deptHead->id]);
+    $this->department->update(['head_staff_id' => $this->deptHead->id]);
 
-    $this->staffInOnlyDept = StaffMember::create([
-        'full_name_en' => 'Only Dept Staff',
-        'email' => 'onlydept@uoz.edu.krd',
-        'college_id' => $this->singleDeptCollege->id,
-        'department_id' => $this->onlyDept->id,
+    $this->sameDeptStaff = StaffMember::create([
+        'full_name_en' => 'Same Dept Staff',
+        'email' => 'samedept@uoz.edu.krd',
+        'college_id' => $this->college->id,
+        'department_id' => $this->department->id,
         'is_active' => true,
     ]);
 
-    $this->staffElsewhere = StaffMember::create([
+    $this->otherCollegeStaff = StaffMember::create([
         'full_name_en' => 'Other College Staff',
-        'email' => 'elsewhere@uoz.edu.krd',
+        'email' => 'othercollege@uoz.edu.krd',
         'college_id' => $this->otherCollege->id,
-        'department_id' => $this->otherDept->id,
+        'department_id' => $this->otherCollegeDept->id,
         'is_active' => true,
     ]);
 
     $this->coordinator = User::create([
         'name' => 'Coord',
-        'email' => 'coord-single@uoz.edu.krd',
+        'email' => 'coord-multi@uoz.edu.krd',
         'password' => Hash::make(Str::random(40)),
-        'college_id' => $this->singleDeptCollege->id,
+        'college_id' => $this->college->id,
         'is_active' => true,
     ]);
     $this->coordinator->assignRole(RolePermissionSeeder::ROLE_QUALITY_COORDINATOR);
 });
 
-it('returns university-wide staff when college has one department and other member is requested', function () {
+it('returns university-wide staff for local external member regardless of department count', function () {
     $response = $this->actingAs($this->coordinator)->getJson(route('committees.staff-options', [
-        'college_id' => $this->singleDeptCollege->id,
+        'college_id' => $this->college->id,
         'filter' => 'other',
-        'exclude_department_id' => $this->onlyDept->id,
+        'exclude_department_id' => $this->department->id,
     ]));
 
     $response->assertOk()
@@ -77,59 +68,75 @@ it('returns university-wide staff when college has one department and other memb
 
     $ids = collect($response->json('items'))->pluck('id');
 
-    expect($ids)->toContain($this->staffElsewhere->id)
-        ->and($ids)->not->toContain($this->staffInOnlyDept->id);
+    expect($ids)->toContain($this->otherCollegeStaff->id)
+        ->and($ids)->not->toContain($this->sameDeptStaff->id);
 });
 
-it('returns university-wide staff for HD college member when college has one department', function () {
+it('returns university-wide staff for HD external member regardless of department count', function () {
     $response = $this->actingAs($this->coordinator)->getJson(route('committees.staff-options', [
-        'college_id' => $this->singleDeptCollege->id,
+        'college_id' => $this->college->id,
         'filter' => 'college',
-        'department_id' => $this->onlyDept->id,
+        'department_id' => $this->department->id,
         'exclude_head' => '1',
     ]));
 
     $response->assertOk()
         ->assertJsonPath('university_wide', true);
 
-    $ids = collect($response->json('items'))->pluck('id');
-
-    expect($ids)->toContain($this->staffElsewhere->id);
+    expect(collect($response->json('items'))->pluck('id'))
+        ->toContain($this->otherCollegeStaff->id);
 });
 
-it('allows HD external member from any college for single-department college', function () {
+it('allows local external member from any college when departments differ', function () {
+    $service = app(\App\Services\Committees\CommitteeService::class);
+    $period = \App\Models\EvaluationPeriod::first();
+
+    $committee = $service->createLocalCommittee($this->coordinator, [
+        'department_id' => $this->department->id,
+        'same_department_member_id' => $this->sameDeptStaff->id,
+        'other_department_member_id' => $this->otherCollegeStaff->id,
+        'evaluation_period_id' => $period->id,
+    ]);
+
+    expect($committee)->toBeInstanceOf(\App\Models\Committee::class);
+});
+
+it('allows HD external member from any college', function () {
     $service = app(\App\Services\Committees\CommitteeService::class);
     $period = \App\Models\EvaluationPeriod::first();
 
     $dean = StaffMember::create([
         'full_name_en' => 'Dean',
-        'email' => 'dean.single@uoz.edu.krd',
-        'college_id' => $this->singleDeptCollege->id,
-        'department_id' => $this->onlyDept->id,
+        'email' => 'dean.multi@uoz.edu.krd',
+        'college_id' => $this->college->id,
+        'department_id' => $this->department->id,
         'is_active' => true,
     ]);
-    $this->singleDeptCollege->update(['dean_staff_id' => $dean->id]);
+    $this->college->update(['dean_staff_id' => $dean->id]);
 
     $committee = $service->createHdCommittee($this->coordinator, [
-        'department_id' => $this->onlyDept->id,
-        'same_department_member_id' => $this->staffInOnlyDept->id,
-        'other_department_member_id' => $this->staffElsewhere->id,
+        'department_id' => $this->department->id,
+        'same_department_member_id' => $this->sameDeptStaff->id,
+        'other_department_member_id' => $this->otherCollegeStaff->id,
         'evaluation_period_id' => $period->id,
     ]);
 
     expect($committee)->toBeInstanceOf(\App\Models\Committee::class);
 });
 
-it('allows other member from any college when validating single-department college', function () {
-    $service = app(\App\Services\Committees\CommitteeService::class);
-    $period = \App\Models\EvaluationPeriod::first();
+it('still scopes same-department member picker to the selected department', function () {
+    $response = $this->actingAs($this->coordinator)->getJson(route('committees.staff-options', [
+        'college_id' => $this->college->id,
+        'filter' => 'department',
+        'department_id' => $this->department->id,
+        'exclude_head' => '1',
+    ]));
 
-    $committee = $service->createLocalCommittee($this->coordinator, [
-        'department_id' => $this->onlyDept->id,
-        'same_department_member_id' => $this->staffInOnlyDept->id,
-        'other_department_member_id' => $this->staffElsewhere->id,
-        'evaluation_period_id' => $period->id,
-    ]);
+    $response->assertOk()
+        ->assertJsonPath('university_wide', false);
 
-    expect($committee)->toBeInstanceOf(\App\Models\Committee::class);
+    $ids = collect($response->json('items'))->pluck('id');
+
+    expect($ids)->toContain($this->sameDeptStaff->id)
+        ->and($ids)->not->toContain($this->otherCollegeStaff->id);
 });

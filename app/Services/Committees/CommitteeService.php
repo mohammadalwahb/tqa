@@ -29,7 +29,7 @@ class CommitteeService
      * - Quality College Coordinator — automatically.
      * - Head of Department for the chosen department — automatically (when assigned).
      * - One staff member from the SAME department (not the head).
-     * - One staff member from ANOTHER department of the same college.
+     * - One staff member from another department (any college in the university).
      *
      * @param array{
      *     department_id:int,
@@ -142,7 +142,7 @@ class CommitteeService
      * - Dean of the college (auto-filled if assigned)
      * - Quality College Coordinator (the current user)
      * - One staff member from the same department
-     * - One other-department member from the same college (may be from the same department)
+     * - One external member from any college (may be from the same department)
      *
      * @param array{
      *     department_id:int,
@@ -335,19 +335,8 @@ class CommitteeService
 
     private function assertValidOtherDepartmentMember(StaffMember $otherDeptStaff, Department $department): void
     {
-        $singleDepartmentCollege = app(CommitteeStaffOptionsService::class)
-            ->collegeHasSingleDepartment((int) $department->college_id);
-
-        if ($singleDepartmentCollege) {
-            return;
-        }
-
         if ((int) $otherDeptStaff->department_id === (int) $department->id) {
             throw new RuntimeException(__('committees.other_member_different_department'));
-        }
-
-        if ((int) $otherDeptStaff->college_id !== (int) $department->college_id) {
-            throw new RuntimeException(__('committees.other_member_same_college'));
         }
     }
 
@@ -355,14 +344,6 @@ class CommitteeService
     {
         if ((int) $staff->id === (int) $department->head_staff_id) {
             throw new RuntimeException(__('messages.committee_head_is_evaluatee'));
-        }
-
-        if (app(CommitteeStaffOptionsService::class)->collegeHasSingleDepartment((int) $department->college_id)) {
-            return;
-        }
-
-        if ((int) $staff->college_id !== (int) $department->college_id) {
-            throw new RuntimeException(__('committees.other_member_same_college'));
         }
     }
 

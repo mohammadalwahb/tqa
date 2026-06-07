@@ -23,8 +23,7 @@ class CommitteeStaffOptionsService
             'filter'                => ['nullable', 'in:department,college,other'],
         ]);
 
-        $collegeId = (int) $request->college_id;
-        $universityWide = $this->shouldOfferUniversityWidePool($request, $collegeId);
+        $universityWide = $this->usesUniversityWideExternalPool($request);
 
         if ($universityWide) {
             $rows = $this->universityStaffQuery($request)->get();
@@ -37,7 +36,7 @@ class CommitteeStaffOptionsService
 
         $query = StaffMember::query()
             ->where('is_active', true)
-            ->where('college_id', $collegeId)
+            ->where('college_id', (int) $request->college_id)
             ->orderBy('full_name_en');
 
         if ($request->input('filter') === 'department' && $request->filled('department_id')) {
@@ -67,22 +66,9 @@ class CommitteeStaffOptionsService
         ];
     }
 
-    public function collegeHasSingleDepartment(int $collegeId): bool
+    private function usesUniversityWideExternalPool(Request $request): bool
     {
-        return Department::query()
-            ->where('college_id', $collegeId)
-            ->where('is_active', true)
-            ->count() <= 1;
-    }
-
-    private function shouldOfferUniversityWidePool(Request $request, int $collegeId): bool
-    {
-        if (! $this->collegeHasSingleDepartment($collegeId)) {
-            return false;
-        }
-
-        return in_array($request->input('filter'), ['other', 'college'], true)
-            || $request->filled('exclude_department_id');
+        return in_array($request->input('filter'), ['other', 'college'], true);
     }
 
     private function universityStaffQuery(Request $request)

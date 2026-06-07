@@ -267,7 +267,7 @@
             ]);
             refreshStaffSelect(sameDept, samePayload, i18n.noStaff);
             refreshStaffSelect(otherDept, otherPayload, i18n.noStaff);
-            setUniversityWideHint(otherHint, otherPayload.university_wide);
+            setUniversityWideHint(otherHint, true, i18n.otherDeptHint);
         });
 
         const hdDept = document.getElementById('hdDept');
@@ -283,7 +283,7 @@
             ]);
             refreshStaffSelect(hdSameDept, samePayload, i18n.noStaff);
             refreshStaffSelect(hdOtherDept, collegePayload, i18n.noStaff);
-            setUniversityWideHint(hdOtherHint, collegePayload.university_wide, i18n.collegeMemberHint);
+            setUniversityWideHint(hdOtherHint, true, i18n.collegeMemberHint);
         });
     });
 </script>

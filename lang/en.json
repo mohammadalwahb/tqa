@@ -282,7 +282,7 @@
     "committees.create_local": "Create Local Committee",
     "committees.create_hd": "Create HD Committee",
     "committees.no_staff": "No staff members found.",
-    "committees.university_wide_hint": "This college has only one department, so all university staff are listed.",
+    "committees.university_wide_hint": "All university staff are listed for the external committee member.",
     "committees.search_staff": "Type to search staff…",
     "committees.other_member_different_department": "The other member must be from a different department in the same college.",
     "committees.other_member_same_college": "The other member must belong to the same college.",

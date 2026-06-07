@@ -278,7 +278,7 @@
     "committees.create_local": "دروستکردنی کۆمیتەی ناوخۆیی",
     "committees.create_hd": "دروستکردنی کۆمیتەی HD",
     "committees.no_staff": "هیچ ئەندامێکی ستاف نەدۆزرایەوە.",
-    "committees.university_wide_hint": "ئەم کۆلێژە تەنها یەک بەشی هەیە، بۆیە هەموو ستافی زانکۆ پیشان دەدرێت.",
+    "committees.university_wide_hint": "هەموو ستافی زانکۆ بۆ ئەندامی دەرەکی لیژنە پیشان دەدرێت.",
     "committees.search_staff": "بنووسە بۆ گەڕانی ستاف…",
     "committees.other_member_different_department": "ئەندامی تر دەبێت لە بەشێکی جیاواز لە هەمان کۆلێژ بێت.",
     "committees.other_member_same_college": "ئەندامی تر دەبێت سەر بە هەمان کۆلێژ بێت.",

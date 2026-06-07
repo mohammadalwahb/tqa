@@ -278,7 +278,7 @@
     "committees.create_local": "إنشاء لجنة محلية",
     "committees.create_hd": "إنشاء لجنة عليا",
     "committees.no_staff": "لم يُعثر على أعضاء هيئة تدريس.",
-    "committees.university_wide_hint": "لهذه الكلية قسم واحد فقط، لذا تُعرض قائمة جميع موظفي الجامعة.",
+    "committees.university_wide_hint": "جميع موظفي الجامعة معروضون لعضو اللجنة الخارجي.",
     "committees.search_staff": "اكتب للبحث عن الموظفين…",
     "committees.other_member_different_department": "يجب أن يكون العضو الآخر من قسم مختلف في نفس الكلية.",
     "committees.other_member_same_college": "يجب أن ينتمي العضو الآخر إلى نفس الكلية.",
