@@ -138,7 +138,7 @@
                                 <select name="other_department_member_id" id="hdOtherDept" class="staff-member-select" required>
                                     <option disabled value="">{{ __('committees.select_dept_first') }}</option>
                                 </select>
-                                <small class="text-muted d-block">{{ __('committees.college_member_hint', ['college' => $collegeName]) }}</small>
+                                <small class="text-muted d-block" id="hdOtherDeptHint">{{ __('committees.college_member_hint', ['college' => $collegeName]) }}</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">{{ __('committees.evaluation_form') }}</label>
@@ -173,6 +173,7 @@
         searchStaff: @json(__('committees.search_staff')),
         universityWide: @json(__('committees.university_wide_hint')),
         otherDeptHint: @json(__('committees.other_dept_hint', ['college' => $collegeName])),
+        collegeMemberHint: @json(__('committees.college_member_hint', ['college' => $collegeName])),
     };
 
     async function fetchStaff(departmentId, mode) {
@@ -244,9 +245,9 @@
         ts.refreshOptions(false);
     }
 
-    function setUniversityWideHint(hintEl, show) {
+    function setUniversityWideHint(hintEl, show, defaultHint) {
         if (!hintEl) return;
-        hintEl.textContent = show ? i18n.universityWide : i18n.otherDeptHint;
+        hintEl.textContent = show ? i18n.universityWide : (defaultHint || i18n.otherDeptHint);
         hintEl.classList.toggle('text-info', show);
         hintEl.classList.toggle('text-muted', !show);
     }
@@ -272,6 +273,7 @@
         const hdDept = document.getElementById('hdDept');
         const hdSameDept = document.getElementById('hdSameDept');
         const hdOtherDept = document.getElementById('hdOtherDept');
+        const hdOtherHint = document.getElementById('hdOtherDeptHint');
         hdDept?.addEventListener('change', async (e) => {
             const id = e.target.value;
             if (!id) return;
@@ -281,6 +283,7 @@
             ]);
             refreshStaffSelect(hdSameDept, samePayload, i18n.noStaff);
             refreshStaffSelect(hdOtherDept, collegePayload, i18n.noStaff);
+            setUniversityWideHint(hdOtherHint, collegePayload.university_wide, i18n.collegeMemberHint);
         });
     });
 </script>

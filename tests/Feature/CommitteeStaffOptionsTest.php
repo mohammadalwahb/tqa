@@ -81,6 +81,45 @@ it('returns university-wide staff when college has one department and other memb
         ->and($ids)->not->toContain($this->staffInOnlyDept->id);
 });
 
+it('returns university-wide staff for HD college member when college has one department', function () {
+    $response = $this->actingAs($this->coordinator)->getJson(route('committees.staff-options', [
+        'college_id' => $this->singleDeptCollege->id,
+        'filter' => 'college',
+        'department_id' => $this->onlyDept->id,
+        'exclude_head' => '1',
+    ]));
+
+    $response->assertOk()
+        ->assertJsonPath('university_wide', true);
+
+    $ids = collect($response->json('items'))->pluck('id');
+
+    expect($ids)->toContain($this->staffElsewhere->id);
+});
+
+it('allows HD external member from any college for single-department college', function () {
+    $service = app(\App\Services\Committees\CommitteeService::class);
+    $period = \App\Models\EvaluationPeriod::first();
+
+    $dean = StaffMember::create([
+        'full_name_en' => 'Dean',
+        'email' => 'dean.single@uoz.edu.krd',
+        'college_id' => $this->singleDeptCollege->id,
+        'department_id' => $this->onlyDept->id,
+        'is_active' => true,
+    ]);
+    $this->singleDeptCollege->update(['dean_staff_id' => $dean->id]);
+
+    $committee = $service->createHdCommittee($this->coordinator, [
+        'department_id' => $this->onlyDept->id,
+        'same_department_member_id' => $this->staffInOnlyDept->id,
+        'other_department_member_id' => $this->staffElsewhere->id,
+        'evaluation_period_id' => $period->id,
+    ]);
+
+    expect($committee)->toBeInstanceOf(\App\Models\Committee::class);
+});
+
 it('allows other member from any college when validating single-department college', function () {
     $service = app(\App\Services\Committees\CommitteeService::class);
     $period = \App\Models\EvaluationPeriod::first();

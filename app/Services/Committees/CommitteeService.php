@@ -185,12 +185,7 @@ class CommitteeService
         }
 
         $otherDeptStaff = StaffMember::findOrFail($otherDeptStaffId);
-        if ((int) $otherDeptStaff->college_id !== (int) $college->id) {
-            throw new RuntimeException(__('committees.other_member_same_college'));
-        }
-        if ((int) $otherDeptStaff->id === (int) $department->head_staff_id) {
-            throw new RuntimeException(__('messages.committee_head_is_evaluatee'));
-        }
+        $this->assertValidHdExternalMember($otherDeptStaff, $department);
 
         $period = EvaluationPeriod::findOrFail($data['evaluation_period_id']);
         $form   = isset($data['evaluation_form_id']) && $data['evaluation_form_id']
@@ -352,6 +347,21 @@ class CommitteeService
         }
 
         if ((int) $otherDeptStaff->college_id !== (int) $department->college_id) {
+            throw new RuntimeException(__('committees.other_member_same_college'));
+        }
+    }
+
+    private function assertValidHdExternalMember(StaffMember $staff, Department $department): void
+    {
+        if ((int) $staff->id === (int) $department->head_staff_id) {
+            throw new RuntimeException(__('messages.committee_head_is_evaluatee'));
+        }
+
+        if (app(CommitteeStaffOptionsService::class)->collegeHasSingleDepartment((int) $department->college_id)) {
+            return;
+        }
+
+        if ((int) $staff->college_id !== (int) $department->college_id) {
             throw new RuntimeException(__('committees.other_member_same_college'));
         }
     }
