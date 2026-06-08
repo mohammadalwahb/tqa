@@ -55,7 +55,9 @@
                                 </a>
                             @endcan
                         @else
-                            <a href="{{ route('evaluations.edit', $e) }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> {{ __('evaluations.fill') }}</a>
+                            @can('update', $e)
+                                <a href="{{ route('evaluations.edit', $e) }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> {{ __('evaluations.fill') }}</a>
+                            @endcan
                         @endif
                     </td>
                 </tr>
