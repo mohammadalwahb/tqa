@@ -10,7 +10,6 @@ use App\Models\EvaluationScoreMetric;
 use App\Models\StaffMember;
 use App\Services\Evaluations\EvaluationScoreCalculator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class EvaluationReportService
@@ -40,26 +39,6 @@ class EvaluationReportService
         ];
     }
 
-    public static function summaryCacheKey(EvaluationPeriod|int $period): string
-    {
-        $id = $period instanceof EvaluationPeriod ? $period->id : $period;
-
-        return "report:period:{$id}:staff_summary";
-    }
-
-    public static function fullProgressCacheKey(EvaluationPeriod|int $period): string
-    {
-        $id = $period instanceof EvaluationPeriod ? $period->id : $period;
-
-        return "report:period:{$id}:staff_progress";
-    }
-
-    public static function forgetPeriodCaches(EvaluationPeriod|int $period): void
-    {
-        Cache::forget(self::summaryCacheKey($period));
-        Cache::forget(self::fullProgressCacheKey($period));
-    }
-
     /**
      * Lightweight staff completion rows for the reports index (SQL aggregates, no per-staff analytics).
      *
@@ -67,11 +46,7 @@ class EvaluationReportService
      */
     public function staffProgressSummary(EvaluationPeriod $period): Collection
     {
-        return Cache::remember(
-            self::summaryCacheKey($period),
-            now()->addMinutes(10),
-            fn () => $this->buildStaffProgressSummary($period),
-        );
+        return $this->buildStaffProgressSummary($period);
     }
 
     /**
@@ -243,11 +218,7 @@ class EvaluationReportService
      */
     public function staffProgress(EvaluationPeriod $period): Collection
     {
-        return Cache::remember(
-            self::fullProgressCacheKey($period),
-            now()->addMinutes(10),
-            fn () => $this->buildStaffProgress($period),
-        );
+        return $this->buildStaffProgress($period);
     }
 
     /**

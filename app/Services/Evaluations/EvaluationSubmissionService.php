@@ -5,7 +5,6 @@ namespace App\Services\Evaluations;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use App\Models\EvaluationQuestion;
-use App\Services\Reporting\EvaluationReportService;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -118,8 +117,6 @@ class EvaluationSubmissionService
             }
 
             $evaluation->save();
-
-            EvaluationReportService::forgetPeriodCaches($evaluation->evaluation_period_id);
         });
 
         return $evaluation->fresh(['answers']);
