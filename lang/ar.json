@@ -375,6 +375,7 @@
     "reports.export_pdf": "تصدير PDF",
     "reports.export_excel": "تصدير Excel",
     "reports.university_completion": "إكمال التقييم على مستوى الجامعة",
+    "reports.college_completion": "إكمال التقييم — :college",
     "reports.completion_of": ":completed من :required تقييمات مُرسَلة",
     "reports.no_evaluations_period": "لا توجد تقييمات بعد للفترة المحددة.",
     "reports.per_staff_completion": "إكمال التقييم لكل موظف",

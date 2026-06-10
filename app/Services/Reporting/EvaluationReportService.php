@@ -22,10 +22,14 @@ class EvaluationReportService
     /**
      * @return array{required:int, completed:int, percentage:float, period_id:int}
      */
-    public function universityProgress(EvaluationPeriod $period): array
+    public function universityProgress(EvaluationPeriod $period, ?int $collegeId = null): array
     {
-        $required  = (int) Evaluation::where('evaluation_period_id', $period->id)->count();
-        $completed = (int) Evaluation::where('evaluation_period_id', $period->id)
+        $baseQuery = Evaluation::query()
+            ->where('evaluation_period_id', $period->id);
+        $this->scopeEvaluationsToCollege($baseQuery, $collegeId);
+
+        $required  = (int) (clone $baseQuery)->count();
+        $completed = (int) (clone $baseQuery)
             ->where('status', Evaluation::STATUS_SUBMITTED)
             ->count();
 
@@ -44,18 +48,21 @@ class EvaluationReportService
      *
      * @return Collection<int, array{staff:StaffMember, required:int, completed:int, percentage:float, average:float|null, question_values:array<int, array<string, mixed>>}>
      */
-    public function staffProgressSummary(EvaluationPeriod $period): Collection
+    public function staffProgressSummary(EvaluationPeriod $period, ?int $collegeId = null): Collection
     {
-        return $this->buildStaffProgressSummary($period);
+        return $this->buildStaffProgressSummary($period, $collegeId);
     }
 
     /**
      * @return Collection<int, array{staff:StaffMember, required:int, completed:int, percentage:float, average:float|null, question_values:array<int, array<string, mixed>>}>
      */
-    private function buildStaffProgressSummary(EvaluationPeriod $period): Collection
+    private function buildStaffProgressSummary(EvaluationPeriod $period, ?int $collegeId = null): Collection
     {
-        $stats = Evaluation::query()
-            ->where('evaluation_period_id', $period->id)
+        $statsQuery = Evaluation::query()
+            ->where('evaluation_period_id', $period->id);
+        $this->scopeEvaluationsToCollege($statsQuery, $collegeId);
+
+        $stats = $statsQuery
             ->selectRaw('evaluatee_staff_id')
             ->selectRaw('COUNT(*) as required')
             ->selectRaw('SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as completed', [Evaluation::STATUS_SUBMITTED])
@@ -76,7 +83,7 @@ class EvaluationReportService
         $reportQuestions = $this->reportQuestionColumns($period);
         $scorableIds     = $reportQuestions->filter(fn (EvaluationQuestion $q) => $q->isScorable())->pluck('id');
 
-        $scorableAverages = $this->batchScorableQuestionAverages($period, $scorableIds);
+        $scorableAverages = $this->batchScorableQuestionAverages($period, $scorableIds, $stats->keys());
         $textSummaries    = $this->batchTextAnswerSummaries($period, $reportQuestions, $stats->keys());
 
         return $staffMembers->map(function (StaffMember $staff) use ($stats, $reportQuestions, $scorableAverages, $textSummaries) {
@@ -105,9 +112,15 @@ class EvaluationReportService
      * @param  Collection<int, int|string>  $questionIds
      * @return array<int, array<int, float>>
      */
-    private function batchScorableQuestionAverages(EvaluationPeriod $period, Collection $questionIds): array
-    {
-        if ($questionIds->isEmpty()) {
+    /**
+     * @param  Collection<int, int|string>  $evaluateeStaffIds
+     */
+    private function batchScorableQuestionAverages(
+        EvaluationPeriod $period,
+        Collection $questionIds,
+        Collection $evaluateeStaffIds,
+    ): array {
+        if ($questionIds->isEmpty() || $evaluateeStaffIds->isEmpty()) {
             return [];
         }
 
@@ -115,6 +128,7 @@ class EvaluationReportService
             ->join('evaluations', 'evaluations.id', '=', 'evaluation_answers.evaluation_id')
             ->where('evaluations.evaluation_period_id', $period->id)
             ->where('evaluations.status', Evaluation::STATUS_SUBMITTED)
+            ->whereIn('evaluations.evaluatee_staff_id', $evaluateeStaffIds)
             ->whereIn('evaluation_answers.evaluation_question_id', $questionIds)
             ->selectRaw('evaluations.evaluatee_staff_id as staff_id')
             ->selectRaw('evaluation_answers.evaluation_question_id as question_id')
@@ -216,20 +230,23 @@ class EvaluationReportService
      *     question_values: array<int, array>
      * }>
      */
-    public function staffProgress(EvaluationPeriod $period): Collection
+    public function staffProgress(EvaluationPeriod $period, ?int $collegeId = null): Collection
     {
-        return $this->buildStaffProgress($period);
+        return $this->buildStaffProgress($period, $collegeId);
     }
 
     /**
      * @return Collection<int, array{staff:StaffMember, required:int, completed:int, percentage:float, average:float|null, question_values:array<int, array<string, mixed>>, derived_metrics:array<int, array<string, mixed>>}>
      */
-    private function buildStaffProgress(EvaluationPeriod $period): Collection
+    private function buildStaffProgress(EvaluationPeriod $period, ?int $collegeId = null): Collection
     {
         $reportQuestions = $this->reportQuestionColumns($period);
 
-        $allEvaluationsByStaff = Evaluation::query()
-            ->where('evaluation_period_id', $period->id)
+        $allEvaluationsQuery = Evaluation::query()
+            ->where('evaluation_period_id', $period->id);
+        $this->scopeEvaluationsToCollege($allEvaluationsQuery, $collegeId);
+
+        $allEvaluationsByStaff = $allEvaluationsQuery
             ->get()
             ->groupBy('evaluatee_staff_id');
 
@@ -237,7 +254,7 @@ class EvaluationReportService
             return collect();
         }
 
-        $submittedByStaff = Evaluation::query()
+        $submittedQuery = Evaluation::query()
             ->with([
                 'answers.question',
                 'committee.members.user.roles',
@@ -248,13 +265,21 @@ class EvaluationReportService
                 'form.scoreMetrics.grades',
             ])
             ->where('evaluation_period_id', $period->id)
-            ->where('status', Evaluation::STATUS_SUBMITTED)
+            ->where('status', Evaluation::STATUS_SUBMITTED);
+        $this->scopeEvaluationsToCollege($submittedQuery, $collegeId);
+
+        $submittedByStaff = $submittedQuery
             ->get()
             ->groupBy('evaluatee_staff_id');
 
-        $staffMembers = StaffMember::query()
+        $staffMembersQuery = StaffMember::query()
             ->with(['department.college'])
-            ->whereIn('id', $allEvaluationsByStaff->keys())
+            ->whereIn('id', $allEvaluationsByStaff->keys());
+        if ($collegeId !== null) {
+            $staffMembersQuery->where('college_id', $collegeId);
+        }
+
+        $staffMembers = $staffMembersQuery
             ->get()
             ->keyBy('id');
 
@@ -574,5 +599,17 @@ class EvaluationReportService
             ->value('text_value');
 
         return $text ? Str::limit($text, 120) : null;
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<Evaluation>  $query
+     */
+    private function scopeEvaluationsToCollege($query, ?int $collegeId): void
+    {
+        if ($collegeId === null) {
+            return;
+        }
+
+        $query->whereHas('evaluatee', fn ($q) => $q->where('college_id', $collegeId));
     }
 }

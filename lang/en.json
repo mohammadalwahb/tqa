@@ -379,6 +379,7 @@
     "reports.export_pdf": "Export PDF",
     "reports.export_excel": "Export Excel",
     "reports.university_completion": "University Evaluation Completion",
+    "reports.college_completion": ":college Evaluation Completion",
     "reports.completion_of": ":completed of :required evaluations submitted",
     "reports.no_evaluations_period": "No evaluations yet for the selected period.",
     "reports.per_staff_completion": "Per-Staff Evaluation Completion",

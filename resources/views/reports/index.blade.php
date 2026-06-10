@@ -35,7 +35,13 @@
     <div class="col-md-12">
         <div class="card stat-card">
             <div class="card-body">
-                <h5 class="mb-3">{{ __('reports.university_completion') }}</h5>
+                <h5 class="mb-3">
+                    @if($scopedCollege)
+                        {{ __('reports.college_completion', ['college' => \App\Support\LocaleHelper::collegeDisplayName($scopedCollege)]) }}
+                    @else
+                        {{ __('reports.university_completion') }}
+                    @endif
+                </h5>
                 @if($progress && $progress['required'] > 0)
                     <div class="d-flex justify-content-between mb-1">
                         <span>{{ __('reports.completion_of', ['completed' => $progress['completed'], 'required' => $progress['required']]) }}</span>

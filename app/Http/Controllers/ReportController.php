@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Exports\StaffEvaluationReportExport;
+use App\Models\College;
 use App\Models\EvaluationPeriod;
 use App\Models\StaffMember;
+use App\Models\User;
 use App\Services\Pdf\PdfDocumentBuilder;
 use App\Services\Reporting\EvaluationReportService;
 use Illuminate\Http\Request;
@@ -23,9 +25,10 @@ class ReportController extends Controller
 
     public function index(Request $request): View
     {
-        $period = $this->resolvePeriod($request);
-        $progress = $period ? $this->reports->universityProgress($period) : null;
-        $staffRows = $period ? $this->reports->staffProgressSummary($period) : collect();
+        $period     = $this->resolvePeriod($request);
+        $collegeId  = $this->reportCollegeScope($request->user());
+        $progress   = $period ? $this->reports->universityProgress($period, $collegeId) : null;
+        $staffRows  = $period ? $this->reports->staffProgressSummary($period, $collegeId) : collect();
         $derivedMetricColumns = collect();
         $reportQuestionColumns = $period ? $this->reports->reportQuestionColumns($period) : collect();
 
@@ -36,6 +39,7 @@ class ReportController extends Controller
             'staffRows'             => $staffRows,
             'derivedMetricColumns'  => $derivedMetricColumns,
             'reportQuestionColumns' => $reportQuestionColumns,
+            'scopedCollege'         => $collegeId ? College::find($collegeId) : null,
         ]);
     }
 
@@ -51,6 +55,8 @@ class ReportController extends Controller
 
     public function staffDetails(Request $request, StaffMember $staff): View
     {
+        $this->authorizeStaffReportAccess($request->user(), $staff);
+
         $period = $this->resolvePeriod($request);
         $analytics = $period
             ? $this->reports->staffAnalytics($staff, $period)
@@ -71,20 +77,24 @@ class ReportController extends Controller
             return response('No period found', 404);
         }
 
-        $progress  = $this->reports->universityProgress($period);
-        $staffRows = $this->reports->staffProgress($period);
+        $collegeId = $this->reportCollegeScope($request->user());
+        $progress  = $this->reports->universityProgress($period, $collegeId);
+        $staffRows = $this->reports->staffProgress($period, $collegeId);
         $derivedMetricColumns = $this->reports->reportDerivedMetricColumns($period);
         $reportQuestionColumns = $this->reports->reportQuestionColumns($period);
+        $scopedCollege = $collegeId ? College::find($collegeId) : null;
 
         return $this->pdfBuilder->download(
             'reports.pdf',
-            compact('period', 'progress', 'staffRows', 'derivedMetricColumns', 'reportQuestionColumns'),
+            compact('period', 'progress', 'staffRows', 'derivedMetricColumns', 'reportQuestionColumns', 'scopedCollege'),
             "tqa-report-{$period->id}.pdf",
         );
     }
 
     public function exportStaffPdf(Request $request, StaffMember $staff): Response
     {
+        $this->authorizeStaffReportAccess($request->user(), $staff);
+
         $period = $this->resolvePeriod($request);
         abort_unless($period, 404);
 
@@ -109,7 +119,8 @@ class ReportController extends Controller
         $period = $this->resolvePeriod($request);
         abort_unless($period, 404);
 
-        $staffRows = $this->reports->staffProgress($period);
+        $collegeId = $this->reportCollegeScope($request->user());
+        $staffRows = $this->reports->staffProgress($period, $collegeId);
         $derivedMetricColumns = $this->reports->reportDerivedMetricColumns($period);
         $reportQuestionColumns = $this->reports->reportQuestionColumns($period);
 
@@ -126,5 +137,26 @@ class ReportController extends Controller
         }
 
         return EvaluationPeriod::currentlyOpen() ?? EvaluationPeriod::orderByDesc('start_date')->first();
+    }
+
+    /**
+     * Non–super-admin users with a college see only their college in reports.
+     */
+    private function reportCollegeScope(User $user): ?int
+    {
+        if ($user->isSuperAdmin()) {
+            return null;
+        }
+
+        return $user->college_id ? (int) $user->college_id : null;
+    }
+
+    private function authorizeStaffReportAccess(User $user, StaffMember $staff): void
+    {
+        $collegeId = $this->reportCollegeScope($user);
+
+        if ($collegeId !== null && (int) $staff->college_id !== $collegeId) {
+            abort(403);
+        }
     }
 }

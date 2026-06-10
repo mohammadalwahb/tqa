@@ -375,6 +375,7 @@
     "reports.export_pdf": "هەناردەی PDF",
     "reports.export_excel": "هەناردەی Excel",
     "reports.university_completion": "تەواوبوونی هەڵسەنگاندنی زانکۆ",
+    "reports.college_completion": "تەواوبوونی هەڵسەنگاندن — :college",
     "reports.completion_of": ":completed لە :required هەڵسەنگاندن نێردراوە",
     "reports.no_evaluations_period": "هێشتا هیچ هەڵسەنگاندنێک نییە بۆ ماوەی هەڵبژێردراو.",
     "reports.per_staff_completion": "تەواوبوونی هەڵسەنگاندن بۆ هەر ستاف",

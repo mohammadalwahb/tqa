@@ -28,7 +28,13 @@
         @pdfText(__('reports.generated')) {{ now()->toDateTimeString() }}
     </div>
 
-    <h2>@pdfText(__('reports.university_completion'))</h2>
+    <h2>
+        @if(!empty($scopedCollege))
+            @pdfText(__('reports.college_completion', ['college' => \App\Support\LocaleHelper::collegeDisplayName($scopedCollege)]))
+        @else
+            @pdfText(__('reports.university_completion'))
+        @endif
+    </h2>
     <div>{{ $progress['completed'] }} / {{ $progress['required'] }} ({{ $progress['percentage'] }}%)</div>
     <div class="progress" style="margin-top:4px;">
         <div class="bar" style="width: {{ $progress['percentage'] }}%;"></div>
