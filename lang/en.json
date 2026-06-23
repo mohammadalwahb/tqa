@@ -290,6 +290,8 @@
     "certificates.align_center": "Center",
     "certificates.align_right": "Right",
     "certificates.field_width": "Field width (px)",
+    "certificates.field_height": "Field height (px)",
+    "certificates.resize_field": "Drag to resize",
     "certificates.canvas_title": "Certificate canvas",
     "certificates.landscape": "Landscape",
     "certificates.save_publish": "Save & publish",

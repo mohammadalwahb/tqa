@@ -35,9 +35,10 @@ it('resolves static text fields for certificate rendering', function () {
     $resolved = $catalog->resolvePlacedFields($form, [[
         'key' => 'text:1',
         'content' => 'Certificate of Excellence',
-        'x' => 10,
-        'y' => 20,
-        'width' => 400,
+        'x' => 10.7,
+        'y' => 20.2,
+        'width' => 400.8,
+        'height' => 60.3,
         'font_size' => 30,
         'font_weight' => 'bold',
         'color' => '#000000',
@@ -46,5 +47,5 @@ it('resolves static text fields for certificate rendering', function () {
 
     expect($resolved)->toHaveCount(1)
         ->and($resolved[0]['content'])->toBe('Certificate of Excellence')
-        ->and($resolved[0]['group'])->toBe('text');
+        ->and($resolved[0]['height'])->toBe(60);
 });

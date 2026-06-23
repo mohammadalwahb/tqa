@@ -25,8 +25,11 @@
         .certificate-field {
             position: absolute;
             overflow: hidden;
-            line-height: 1.2;
+            line-height: 1.25;
             word-wrap: break-word;
+            overflow-wrap: anywhere;
+            white-space: normal;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -46,7 +49,7 @@
         <div class="certificate-page" style="width:{{ $width }}px;height:{{ $height }}px;">
             @foreach($fields as $field)
                 <div class="certificate-field"
-                     style="left:{{ $field['x'] }}px;top:{{ $field['y'] }}px;width:{{ $field['width'] }}px;
+                     style="left:{{ $field['x'] }}px;top:{{ $field['y'] }}px;width:{{ $field['width'] }}px;height:{{ $field['height'] ?? 48 }}px;
                             font-size:{{ $field['font_size'] }}px;font-weight:{{ $field['font_weight'] }};
                             color:{{ $field['color'] }};text-align:{{ $field['text_align'] }};">
                     {{ $field['value'] }}

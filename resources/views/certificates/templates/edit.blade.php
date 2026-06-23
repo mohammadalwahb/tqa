@@ -64,9 +64,51 @@
     cursor: move;
     padding: 2px 4px;
     overflow: hidden;
-    line-height: 1.2;
+    line-height: 1.25;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+    box-sizing: border-box;
     z-index: 10;
 }
+.cert-canvas-field .resize-handle {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    width: 12px;
+    height: 12px;
+    background: #2563eb;
+    border: 1px solid #fff;
+    border-radius: 2px;
+    cursor: se-resize;
+    z-index: 3;
+    display: none;
+}
+.cert-canvas-field.selected .resize-handle { display: block; }
+.cert-canvas-field .resize-handle-e {
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 24px;
+    cursor: e-resize;
+    z-index: 2;
+    display: none;
+}
+.cert-canvas-field .resize-handle-s {
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 8px;
+    cursor: s-resize;
+    z-index: 2;
+    display: none;
+}
+.cert-canvas-field.selected .resize-handle-e,
+.cert-canvas-field.selected .resize-handle-s { display: block; }
 .cert-canvas-field.is-text { border-color: #059669; background: rgba(5, 150, 105, 0.08); }
 .cert-canvas-field.selected { border-style: solid; background: rgba(37, 99, 235, 0.15); }
 .cert-canvas-field.is-text.selected { background: rgba(5, 150, 105, 0.15); }
@@ -193,9 +235,13 @@
                             <option value="right">{{ __('certificates.align_right') }}</option>
                         </select>
                     </div>
-                    <div class="mb-0">
+                    <div class="mb-2">
                         <label class="form-label small">{{ __('certificates.field_width') }}</label>
-                        <input type="number" class="form-control form-control-sm" id="inspectorWidth" min="40" max="1000" value="300">
+                        <input type="number" class="form-control form-control-sm" id="inspectorWidth" min="40" max="2000" value="300">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small">{{ __('certificates.field_height') }}</label>
+                        <input type="number" class="form-control form-control-sm" id="inspectorHeight" min="20" max="800" value="48">
                     </div>
                 </div>
             </div>
@@ -268,11 +314,25 @@ document.addEventListener('DOMContentLoaded', function () {
             x: 80,
             y: 80,
             width: 320,
+            height: 48,
             font_size: 22,
             font_weight: 'bold',
             color: '#000000',
             text_align: 'center',
         };
+    }
+
+    function roundField(field) {
+        field.x = Math.round(field.x);
+        field.y = Math.round(field.y);
+        field.width = Math.round(field.width);
+        field.height = Math.round(field.height || 48);
+        field.font_size = Math.round(field.font_size);
+        return field;
+    }
+
+    function normalizeAllFields() {
+        fields = fields.map(function (f) { return roundField(f); });
     }
 
     function defaultTextField(content) {
@@ -371,6 +431,7 @@ document.addEventListener('DOMContentLoaded', function () {
             el.style.left = field.x + 'px';
             el.style.top = field.y + 'px';
             el.style.width = field.width + 'px';
+            el.style.height = (field.height || 48) + 'px';
             el.style.fontSize = field.font_size + 'px';
             el.style.fontWeight = field.font_weight;
             el.style.color = field.color;
@@ -390,6 +451,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderCanvas();
             });
             el.appendChild(removeBtn);
+
+            const handleSe = document.createElement('div');
+            handleSe.className = 'resize-handle';
+            handleSe.title = @json(__('certificates.resize_field'));
+            handleSe.addEventListener('mousedown', function (e) { startResize(e, index, 'se'); });
+            el.appendChild(handleSe);
+
+            const handleE = document.createElement('div');
+            handleE.className = 'resize-handle-e';
+            handleE.addEventListener('mousedown', function (e) { startResize(e, index, 'e'); });
+            el.appendChild(handleE);
+
+            const handleS = document.createElement('div');
+            handleS.className = 'resize-handle-s';
+            handleS.addEventListener('mousedown', function (e) { startResize(e, index, 's'); });
+            el.appendChild(handleS);
+
             el.addEventListener('mousedown', startDrag);
             el.addEventListener('click', function (e) {
                 e.stopPropagation();
@@ -418,6 +496,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('inspectorColor').value = field.color;
         document.getElementById('inspectorAlign').value = field.text_align;
         document.getElementById('inspectorWidth').value = field.width;
+        document.getElementById('inspectorHeight').value = field.height || 48;
     }
 
     function syncInspectorToField() {
@@ -432,12 +511,19 @@ document.addEventListener('DOMContentLoaded', function () {
         field.color = document.getElementById('inspectorColor').value;
         field.text_align = document.getElementById('inspectorAlign').value;
         field.width = parseInt(document.getElementById('inspectorWidth').value, 10) || 300;
+        field.height = parseInt(document.getElementById('inspectorHeight').value, 10) || 48;
+        roundField(field);
         renderCanvas();
         selectField(canvas.querySelector('[data-index="' + selectedEl.index + '"]'), selectedEl.index);
     }
 
     function startDrag(e) {
-        if (e.target.classList.contains('remove-field')) return;
+        if (e.target.classList.contains('remove-field')
+            || e.target.classList.contains('resize-handle')
+            || e.target.classList.contains('resize-handle-e')
+            || e.target.classList.contains('resize-handle-s')) {
+            return;
+        }
         const el = e.currentTarget;
         const index = parseInt(el.dataset.index, 10);
         selectField(el, index);
@@ -454,7 +540,43 @@ document.addEventListener('DOMContentLoaded', function () {
             el.style.top = field.y + 'px';
         }
         function onUp() {
+            roundField(field);
             clearGuides();
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    }
+
+    function startResize(e, index, mode) {
+        e.preventDefault();
+        e.stopPropagation();
+        const field = fields[index];
+        const el = canvas.querySelector('[data-index="' + index + '"]');
+        selectField(el, index);
+        const rect = canvas.getBoundingClientRect();
+        const startX = (e.clientX - rect.left) / scale;
+        const startY = (e.clientY - rect.top) / scale;
+        const startWidth = field.width;
+        const startHeight = field.height || 48;
+
+        function onMove(ev) {
+            const currentX = (ev.clientX - rect.left) / scale;
+            const currentY = (ev.clientY - rect.top) / scale;
+            if (mode === 'se' || mode === 'e') {
+                field.width = Math.max(40, Math.min(CANVAS_W - field.x, Math.round(startWidth + (currentX - startX))));
+            }
+            if (mode === 'se' || mode === 's') {
+                field.height = Math.max(20, Math.min(CANVAS_H - field.y, Math.round(startHeight + (currentY - startY))));
+            }
+            el.style.width = field.width + 'px';
+            el.style.height = field.height + 'px';
+            document.getElementById('inspectorWidth').value = field.width;
+            document.getElementById('inspectorHeight').value = field.height;
+        }
+        function onUp() {
+            roundField(field);
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
         }
@@ -479,7 +601,7 @@ document.addEventListener('DOMContentLoaded', function () {
         selectField(canvas.querySelector('[data-index="' + (fields.length - 1) + '"]'), fields.length - 1);
     });
 
-    ['inspectorFontSize', 'inspectorFontWeight', 'inspectorColor', 'inspectorAlign', 'inspectorWidth', 'inspectorContent'].forEach(function (id) {
+    ['inspectorFontSize', 'inspectorFontWeight', 'inspectorColor', 'inspectorAlign', 'inspectorWidth', 'inspectorHeight', 'inspectorContent'].forEach(function (id) {
         document.getElementById(id).addEventListener('input', syncInspectorToField);
     });
 
@@ -488,12 +610,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     form.addEventListener('submit', function () {
+        normalizeAllFields();
         layoutInput.value = JSON.stringify(fields);
     });
 
     document.getElementById('saveAndPublishBtn').addEventListener('click', function () {
         document.getElementById('publishFlag').disabled = false;
         form.querySelector('input[name="is_published"][value="0"]').disabled = true;
+        normalizeAllFields();
         layoutInput.value = JSON.stringify(fields);
         form.requestSubmit();
     });
@@ -509,6 +633,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     renderCanvas();
+    fields.forEach(function (f, i) {
+        if (!f.height) { fields[i].height = 48; }
+    });
 });
 </script>
 @endpush

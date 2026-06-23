@@ -38,10 +38,11 @@ class CertificateTemplateRequest extends FormRequest
             'layout_fields'        => ['nullable', 'array'],
             'layout_fields.*.key'  => ['required', 'string', 'max:120'],
             'layout_fields.*.content' => ['nullable', 'string', 'max:500'],
-            'layout_fields.*.x'    => ['required', 'integer', 'min:0', 'max:5000'],
-            'layout_fields.*.y'    => ['required', 'integer', 'min:0', 'max:5000'],
-            'layout_fields.*.width'       => ['required', 'integer', 'min:40', 'max:5000'],
-            'layout_fields.*.font_size'   => ['required', 'integer', 'min:8', 'max:120'],
+            'layout_fields.*.x'    => ['required', 'numeric', 'min:0', 'max:5000'],
+            'layout_fields.*.y'    => ['required', 'numeric', 'min:0', 'max:5000'],
+            'layout_fields.*.width'       => ['required', 'numeric', 'min:40', 'max:5000'],
+            'layout_fields.*.height'      => ['required', 'numeric', 'min:20', 'max:5000'],
+            'layout_fields.*.font_size'   => ['required', 'numeric', 'min:8', 'max:120'],
             'layout_fields.*.font_weight' => ['required', 'in:normal,bold'],
             'layout_fields.*.color'       => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'layout_fields.*.text_align'  => ['required', 'in:left,center,right'],
@@ -73,12 +74,37 @@ class CertificateTemplateRequest extends FormRequest
         if ($this->has('layout_json') && ! $this->has('layout_fields')) {
             $decoded = json_decode((string) $this->input('layout_json'), true);
             if (is_array($decoded)) {
-                $this->merge(['layout_fields' => $decoded]);
+                $this->merge(['layout_fields' => $this->normalizeLayoutFields($decoded)]);
             }
+        } elseif ($this->has('layout_fields')) {
+            $this->merge(['layout_fields' => $this->normalizeLayoutFields($this->input('layout_fields', []))]);
         }
 
         $this->merge([
             'is_published' => $this->boolean('is_published'),
         ]);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $fields
+     * @return list<array<string, mixed>>
+     */
+    private function normalizeLayoutFields(array $fields): array
+    {
+        $intKeys = ['x', 'y', 'width', 'height', 'font_size'];
+
+        return array_values(array_map(function (array $field) use ($intKeys) {
+            foreach ($intKeys as $key) {
+                if (array_key_exists($key, $field) && $field[$key] !== null && $field[$key] !== '') {
+                    $field[$key] = (int) round((float) $field[$key]);
+                }
+            }
+
+            if (! isset($field['height'])) {
+                $field['height'] = 48;
+            }
+
+            return $field;
+        }, $fields));
     }
 }

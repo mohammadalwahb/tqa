@@ -112,6 +112,7 @@ class CertificateFieldCatalog
             'x'           => (int) ($placed['x'] ?? 0),
             'y'           => (int) ($placed['y'] ?? 0),
             'width'       => (int) ($placed['width'] ?? 300),
+            'height'      => (int) ($placed['height'] ?? 48),
             'font_size'   => (int) ($placed['font_size'] ?? 20),
             'font_weight' => (string) ($placed['font_weight'] ?? 'normal'),
             'color'       => (string) ($placed['color'] ?? '#000000'),
