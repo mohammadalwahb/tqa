@@ -46,6 +46,7 @@ class CertificateRenderService
         $placed = $this->fields->resolvePlacedFields(
             $template->form,
             $template->placedFields(),
+            $template->period,
         );
 
         $analytics = $this->scores->staffAnalytics($staff, $template->period);
@@ -54,7 +55,7 @@ class CertificateRenderService
 
         return collect($placed)->map(function (array $field) use ($staff, $extractions, $questions) {
             return array_merge($field, [
-                'value' => $this->resolveValue($field['key'], $staff, $extractions, $questions),
+                'value' => $this->resolveFieldValue($field, $staff, $extractions, $questions),
             ]);
         })->all();
     }
@@ -72,6 +73,26 @@ class CertificateRenderService
             'width'    => $template->canvas_width ?: CertificateTemplate::CANVAS_WIDTH,
             'height'   => $template->canvas_height ?: CertificateTemplate::CANVAS_HEIGHT,
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $field
+     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $extractions
+     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $questions
+     */
+    private function resolveFieldValue(
+        array $field,
+        StaffMember $staff,
+        \Illuminate\Support\Collection $extractions,
+        \Illuminate\Support\Collection $questions,
+    ): string {
+        $key = (string) ($field['key'] ?? '');
+
+        if ($this->fields->isStaticTextKey($key)) {
+            return (string) ($field['content'] ?? '');
+        }
+
+        return $this->resolveValue($key, $staff, $extractions, $questions);
     }
 
     /**

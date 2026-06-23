@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\CertificateTemplate;
 use App\Models\EvaluationForm;
+use App\Models\EvaluationPeriod;
 use App\Services\Certificates\CertificateFieldCatalog;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -36,6 +37,7 @@ class CertificateTemplateRequest extends FormRequest
             'is_published'         => ['sometimes', 'boolean'],
             'layout_fields'        => ['nullable', 'array'],
             'layout_fields.*.key'  => ['required', 'string', 'max:120'],
+            'layout_fields.*.content' => ['nullable', 'string', 'max:500'],
             'layout_fields.*.x'    => ['required', 'integer', 'min:0', 'max:5000'],
             'layout_fields.*.y'    => ['required', 'integer', 'min:0', 'max:5000'],
             'layout_fields.*.width'       => ['required', 'integer', 'min:40', 'max:5000'],
@@ -49,17 +51,18 @@ class CertificateTemplateRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
+            $period = EvaluationPeriod::find($this->input('evaluation_period_id'));
             $form = EvaluationForm::find($this->input('evaluation_form_id'));
             if (! $form) {
                 return;
             }
 
-            $keys = collect($this->input('layout_fields', []))->pluck('key')->all();
-            if ($keys === []) {
+            $layoutFields = $this->input('layout_fields', []);
+            if ($layoutFields === []) {
                 return;
             }
 
-            if (! app(CertificateFieldCatalog::class)->validateFieldKeys($form, $keys)) {
+            if (! app(CertificateFieldCatalog::class)->validateLayoutFields($form, $layoutFields, $period)) {
                 $validator->errors()->add('layout_fields', __('certificates.invalid_fields'));
             }
         });

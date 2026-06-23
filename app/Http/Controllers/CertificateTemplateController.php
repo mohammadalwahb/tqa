@@ -58,7 +58,7 @@ class CertificateTemplateController extends Controller
             'period'        => $period,
             'form'          => $form,
             'forms'         => EvaluationForm::where('target_type', 'staff')->orderBy('name')->get(),
-            'fieldCatalog'  => $this->fields->availableFields($form),
+            'fieldCatalog'  => $this->fields->availableFields($form, $period),
             'placedFields'  => $template->placedFields(),
         ]);
     }
@@ -89,7 +89,7 @@ class CertificateTemplateController extends Controller
             'period'       => $certificateTemplate->period,
             'form'         => $certificateTemplate->form,
             'forms'        => EvaluationForm::where('target_type', 'staff')->orderBy('name')->get(),
-            'fieldCatalog' => $this->fields->availableFields($certificateTemplate->form),
+            'fieldCatalog' => $this->fields->availableFields($certificateTemplate->form, $certificateTemplate->period),
             'placedFields' => $certificateTemplate->placedFields(),
         ]);
     }
