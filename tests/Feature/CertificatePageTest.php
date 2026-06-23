@@ -218,3 +218,25 @@ it('renders derived metric values on certificate even when hidden from reports',
     expect($response->headers->get('content-type'))->toContain('application/pdf');
     expect(substr($response->getContent(), 0, 4))->toBe('%PDF');
 });
+
+it('keeps certificate pdf on a single page when fields are near the bottom edge', function () {
+    CertificateTemplate::create([
+        'evaluation_period_id' => $this->period->id,
+        'evaluation_form_id' => $this->form->id,
+        'layout' => ['fields' => [
+            ['key' => 'full_name_en', 'x' => 100, 'y' => 746, 'width' => 400, 'height' => 48, 'font_size' => 28, 'font_weight' => 'bold', 'color' => '#000000', 'text_align' => 'center'],
+            ['key' => 'academic_title', 'x' => 100, 'y' => 700, 'width' => 400, 'height' => 40, 'font_size' => 20, 'font_weight' => 'normal', 'color' => '#000000', 'text_align' => 'center'],
+        ]],
+        'is_published' => true,
+        'created_by' => $this->admin->id,
+    ]);
+
+    $response = $this->actingAs($this->teacherUser)
+        ->get(route('certificates.download.pdf', $this->period));
+
+    $response->assertOk();
+
+    preg_match_all('/\/Type\s*\/Page(?!s)/', $response->getContent(), $pages);
+
+    expect(count($pages[0]))->toBe(1);
+});

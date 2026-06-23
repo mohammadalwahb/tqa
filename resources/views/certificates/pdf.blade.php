@@ -2,19 +2,37 @@
 <html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
+    @php
+        $dpi = (float) config('dompdf.options.dpi', 96);
+        $widthPt = round($width * 72 / $dpi, 2);
+        $heightPt = round($height * 72 / $dpi, 2);
+    @endphp
     <style>
-        @page { margin: 0; }
+        @page {
+            margin: 0;
+            size: {{ $widthPt }}pt {{ $heightPt }}pt;
+        }
         * { box-sizing: border-box; }
-        body {
+        html, body {
             margin: 0;
             padding: 0;
+            width: {{ $width }}px;
+            height: {{ $height }}px;
+            max-width: {{ $width }}px;
+            max-height: {{ $height }}px;
+            overflow: hidden;
             font-family: 'DejaVu Sans', sans-serif;
             direction: ltr;
         }
         .certificate-page {
             width: {{ $width }}px;
             height: {{ $height }}px;
+            max-width: {{ $width }}px;
+            max-height: {{ $height }}px;
             position: relative;
+            overflow: hidden;
+            page-break-after: avoid;
+            page-break-inside: avoid;
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -37,6 +55,7 @@
             font-family: 'DejaVu Sans', sans-serif;
             direction: ltr;
             unicode-bidi: embed;
+            page-break-inside: avoid;
         }
     </style>
 </head>
