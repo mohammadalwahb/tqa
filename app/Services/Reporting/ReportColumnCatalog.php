@@ -180,12 +180,7 @@ class ReportColumnCatalog
         }
 
         if (! empty($metricData['letter_grade'])) {
-            $text = $metricData['letter_grade'];
-            if (! empty($metricData['letter_range'])) {
-                $text .= ' (' . $metricData['letter_range'] . ')';
-            }
-
-            return $text;
+            return (string) $metricData['letter_grade'];
         }
 
         if (($metricData['value'] ?? null) === null) {
