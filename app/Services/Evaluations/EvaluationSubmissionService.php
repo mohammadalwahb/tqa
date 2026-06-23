@@ -5,6 +5,7 @@ namespace App\Services\Evaluations;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use App\Models\EvaluationQuestion;
+use App\Services\Evaluations\EvaluationQuestionVisibilityService;
 use App\Services\Evaluations\SuperAdminEvaluationAssignmentService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,7 @@ class EvaluationSubmissionService
 {
     public function __construct(
         private readonly SuperAdminEvaluationAssignmentService $superAdminEvaluations,
+        private readonly EvaluationQuestionVisibilityService $questionVisibility,
     ) {
     }
 
@@ -50,7 +52,9 @@ class EvaluationSubmissionService
 
         $questions = $form->questions->where('is_enabled', true);
 
-        if (! $adminOverride) {
+        if ($this->questionVisibility->usesSuperAdminQuestionScope($evaluation)) {
+            $questions = $this->questionVisibility->filterForSuperAdmin($questions);
+        } elseif (! $adminOverride) {
             $evaluator = $evaluation->evaluator()->with('roles')->first();
             $roleIds   = $evaluator?->roles->pluck('id') ?? collect();
 

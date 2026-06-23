@@ -36,8 +36,10 @@ class SuperAdminEvaluationController extends Controller
         $period = $this->resolvePeriod($request);
         abort_unless($period, 404);
 
+        set_time_limit(0);
+
         try {
-            $zipPath = $this->zipExporter->createZipForPeriod($period);
+            $zipPath = $this->zipExporter->createZipForPeriod($period, submittedOnly: true);
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }

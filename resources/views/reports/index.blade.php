@@ -16,7 +16,14 @@
             </div>
             <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-funnel"></i> {{ __('common.apply') }}</button></div>
             @if($period && $progress && $progress['required'] > 0)
-                <div class="col-md-3 ms-auto">
+                @if(auth()->user()?->isSuperAdmin() && !empty($csvColumns))
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-outline-secondary w-100" data-bs-toggle="modal" data-bs-target="#csvExportModal">
+                            <i class="bi bi-filetype-csv"></i> {{ __('reports.custom_csv') }}
+                        </button>
+                    </div>
+                @endif
+                <div class="col-md-3 {{ auth()->user()?->isSuperAdmin() && !empty($csvColumns) ? '' : 'ms-auto' }}">
                     <a href="{{ route('reports.export.pdf', ['period_id' => $period->id]) }}" class="btn btn-outline-danger w-100">
                         <i class="bi bi-file-earmark-pdf"></i> {{ __('reports.export_pdf') }}
                     </a>
@@ -128,4 +135,6 @@
         </table>
     </div>
 </div>
+
+@include('reports.partials.csv-export-modal')
 @endsection

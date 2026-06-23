@@ -59,11 +59,17 @@
 </div>
 
 <div class="d-flex gap-2 mt-3">
-    <a href="{{ route('evaluations.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> {{ __('common.back') }}</a>
-    @can('evaluations.manage')
-        <a href="{{ route('evaluations.edit', $evaluation) }}" class="btn btn-primary">
+    <a href="{{ $returnRoute ?? route('evaluations.index') }}" class="btn btn-light"><i class="bi bi-arrow-left"></i> {{ __('common.back') }}</a>
+    @if(!empty($superAdminScope))
+        <a href="{{ route('evaluations.edit', ['evaluation' => $evaluation, 'from' => 'super-admin']) }}" class="btn btn-primary">
             <i class="bi bi-pencil-square"></i> {{ __('evaluations.edit_answers') }}
         </a>
-    @endcan
+    @else
+        @can('evaluations.manage')
+            <a href="{{ route('evaluations.edit', $evaluation) }}" class="btn btn-primary">
+                <i class="bi bi-pencil-square"></i> {{ __('evaluations.edit_answers') }}
+            </a>
+        @endcan
+    @endif
 </div>
 @endsection

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Evaluation;
+use App\Services\Evaluations\EvaluationQuestionVisibilityService;
 use App\Services\Evaluations\EvaluationSubmissionService;
 use App\Services\Evaluations\SuperAdminEvaluationAssignmentService;
 use Database\Seeders\RolePermissionSeeder;
@@ -16,6 +17,7 @@ class EvaluationController extends Controller
     public function __construct(
         private readonly EvaluationSubmissionService $submission,
         private readonly SuperAdminEvaluationAssignmentService $superAdminEvaluations,
+        private readonly EvaluationQuestionVisibilityService $questionVisibility,
     ) {
     }
 
@@ -52,13 +54,30 @@ class EvaluationController extends Controller
         return view('evaluations.index', compact('evaluations'));
     }
 
-    public function show(Evaluation $evaluation): View
+    public function show(Request $request, Evaluation $evaluation): View
     {
         $this->authorize('view', $evaluation);
 
-        $evaluation->load(['answers.question.category', 'evaluatee', 'evaluator', 'form', 'committee']);
+        $evaluation->load(['answers.question.category', 'answers.question.visibleToRoles', 'evaluatee', 'evaluator', 'form.questions.visibleToRoles', 'committee']);
 
-        return view('evaluations.show', compact('evaluation'));
+        if ($this->questionVisibility->usesSuperAdminQuestionScope($evaluation, $request->query('from'))) {
+            $visibleQuestionIds = $this->questionVisibility
+                ->filterForSuperAdmin($evaluation->form->questions->where('is_enabled', true))
+                ->pluck('id');
+
+            $evaluation->setRelation(
+                'answers',
+                $evaluation->answers->whereIn('evaluation_question_id', $visibleQuestionIds)->values()
+            );
+        }
+
+        $returnRoute = $request->query('from') === 'super-admin'
+            ? route('super-admin.evaluations.index', ['period_id' => $evaluation->evaluation_period_id])
+            : route('evaluations.index');
+
+        $superAdminScope = $this->questionVisibility->usesSuperAdminQuestionScope($evaluation, $request->query('from'));
+
+        return view('evaluations.show', compact('evaluation', 'returnRoute', 'superAdminScope'));
     }
 
     public function edit(Request $request, Evaluation $evaluation): View|RedirectResponse
@@ -69,23 +88,32 @@ class EvaluationController extends Controller
 
         $user = auth()->user();
         $userRoleIds = $user->roles->pluck('id')->all();
+        $superAdminScope = $this->questionVisibility->usesSuperAdminQuestionScope($evaluation, $request->query('from'));
 
-        $adminEdit = $user->can('evaluations.manage') && $evaluation->isSubmitted();
+        $adminEdit = $user->can('evaluations.manage') && $evaluation->isSubmitted() && ! $superAdminScope;
+        $superAdminEdit = $superAdminScope && $evaluation->isSubmitted();
 
-        $visibleQuestions = $evaluation->form->questions
-            ->where('is_enabled', true)
-            ->filter(function ($q) use ($userRoleIds, $adminEdit) {
-                if ($adminEdit) {
-                    return true;
-                }
-                if ($q->visibleToRoles->isEmpty()) {
-                    return true;
-                }
+        if ($superAdminScope) {
+            $visibleQuestions = $this->questionVisibility
+                ->filterForSuperAdmin($evaluation->form->questions->where('is_enabled', true))
+                ->sortBy('sort_order')
+                ->values();
+        } else {
+            $visibleQuestions = $evaluation->form->questions
+                ->where('is_enabled', true)
+                ->filter(function ($q) use ($userRoleIds, $adminEdit) {
+                    if ($adminEdit) {
+                        return true;
+                    }
+                    if ($q->visibleToRoles->isEmpty()) {
+                        return true;
+                    }
 
-                return $q->visibleToRoles->pluck('id')->intersect($userRoleIds)->isNotEmpty();
-            })
-            ->sortBy('sort_order')
-            ->values();
+                    return $q->visibleToRoles->pluck('id')->intersect($userRoleIds)->isNotEmpty();
+                })
+                ->sortBy('sort_order')
+                ->values();
+        }
 
         $answersByQuestion = $evaluation->answers->keyBy('evaluation_question_id');
         $returnRoute       = $this->evaluationReturnRoute($request, $evaluation);
@@ -95,6 +123,7 @@ class EvaluationController extends Controller
             'visibleQuestions'  => $visibleQuestions,
             'answersByQuestion' => $answersByQuestion,
             'adminEdit'         => $adminEdit,
+            'superAdminEdit'    => $superAdminEdit,
             'returnRoute'       => $returnRoute,
         ]);
     }
@@ -103,7 +132,9 @@ class EvaluationController extends Controller
     {
         $this->authorize('update', $evaluation);
 
-        $adminOverride = $request->user()->can('evaluations.manage') && $evaluation->isSubmitted();
+        $superAdminScope = $this->questionVisibility->usesSuperAdminQuestionScope($evaluation, $request->query('from'));
+        $adminOverride = ($request->user()->can('evaluations.manage') && $evaluation->isSubmitted() && ! $superAdminScope)
+            || ($superAdminScope && $evaluation->isSubmitted());
 
         try {
             $this->submission->saveAnswers(

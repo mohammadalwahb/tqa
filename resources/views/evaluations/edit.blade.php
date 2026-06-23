@@ -3,7 +3,7 @@
 @section('title', __('evaluations.evaluate_title', ['name' => \App\Support\LocaleHelper::staffDisplayName($evaluation->evaluatee)]))
 
 @section('content')
-@if(!empty($adminEdit) && $evaluation->isSubmitted())
+@if((!empty($adminEdit) || !empty($superAdminEdit)) && $evaluation->isSubmitted())
     <div class="alert alert-warning">
         <i class="bi bi-shield-lock me-1"></i>
         {{ __('evaluations.super_admin_edit_notice') }}
@@ -87,11 +87,11 @@
     @endif
 
     <div class="d-flex gap-2">
-        <button class="btn btn-{{ !empty($adminEdit) && $evaluation->isSubmitted() ? 'primary' : 'outline-secondary' }}">
+        <button class="btn btn-{{ (!empty($adminEdit) || !empty($superAdminEdit)) && $evaluation->isSubmitted() ? 'primary' : 'outline-secondary' }}">
             <i class="bi bi-save"></i>
-            {{ !empty($adminEdit) && $evaluation->isSubmitted() ? __('evaluations.save_changes') : __('evaluations.save_draft') }}
+            {{ (!empty($adminEdit) || !empty($superAdminEdit)) && $evaluation->isSubmitted() ? __('evaluations.save_changes') : __('evaluations.save_draft') }}
         </button>
-        @if(empty($adminEdit) || ! $evaluation->isSubmitted())
+        @if(empty($adminEdit) && empty($superAdminEdit) || ! $evaluation->isSubmitted())
             <button type="submit" formaction="{{ route('evaluations.submit', $evaluation) }}" formmethod="POST"
                     class="btn btn-success" id="submitBtn">
                 <i class="bi bi-check2-circle"></i> {{ __('evaluations.submit') }}
@@ -105,7 +105,7 @@
 </form>
 
 @push('scripts')
-@if(empty($adminEdit) || ! $evaluation->isSubmitted())
+@if(empty($adminEdit) && empty($superAdminEdit) || ! $evaluation->isSubmitted())
 <script>
     document.getElementById('submitBtn')?.addEventListener('click', function (e) {
         e.preventDefault();

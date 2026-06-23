@@ -23,6 +23,7 @@
                        class="btn btn-outline-danger w-100">
                         <i class="bi bi-file-earmark-zip"></i> {{ __('super_admin_evaluations.download_all_pdfs') }}
                     </a>
+                    <small class="text-muted d-block mt-1">{{ __('super_admin_evaluations.zip_submitted_only') }}</small>
                 </div>
             @endif
         </form>
@@ -77,15 +78,13 @@
                     <td class="text-end">{{ $e->total_score ? number_format((float) $e->total_score, 2) : '—' }}</td>
                     <td class="text-end text-nowrap">
                         @if($e->status === 'submitted')
-                            <a href="{{ route('evaluations.show', $e) }}" class="btn btn-outline-secondary btn-sm" title="{{ __('common.view') }}">
+                            <a href="{{ route('evaluations.show', ['evaluation' => $e, 'from' => 'super-admin']) }}" class="btn btn-outline-secondary btn-sm" title="{{ __('common.view') }}">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            @can('evaluations.manage')
-                                <a href="{{ route('evaluations.edit', ['evaluation' => $e, 'from' => 'super-admin']) }}"
-                                   class="btn btn-outline-primary btn-sm" title="{{ __('evaluations.edit_answers') }}">
-                                    <i class="bi bi-pencil-square"></i>
-                                </a>
-                            @endcan
+                            <a href="{{ route('evaluations.edit', ['evaluation' => $e, 'from' => 'super-admin']) }}"
+                               class="btn btn-outline-primary btn-sm" title="{{ __('evaluations.edit_answers') }}">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
                         @else
                             @can('update', $e)
                                 <a href="{{ route('evaluations.edit', ['evaluation' => $e, 'from' => 'super-admin']) }}"

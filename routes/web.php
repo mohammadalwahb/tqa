@@ -163,6 +163,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::get('reports/staff/{staff}/export/pdf', [ReportController::class, 'exportStaffPdf'])->name('reports.staff.export.pdf');
         Route::get('reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
         Route::get('reports/export/excel', [ReportController::class, 'exportExcel'])->name('reports.export.excel');
+        Route::post('reports/export/csv', [ReportController::class, 'exportCustomCsv'])->name('reports.export.csv');
     });
 
     // Activity Log

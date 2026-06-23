@@ -139,9 +139,25 @@ it('lets super admin submit shared evaluations after the period closes', functio
 });
 
 it('creates a zip archive with one pdf per staff member', function () {
+    $evaluation = Evaluation::query()
+        ->where('evaluation_period_id', $this->period->id)
+        ->where('evaluatee_staff_id', $this->teacher->id)
+        ->whereHas('evaluator.roles', fn ($q) => $q->where('name', RolePermissionSeeder::ROLE_SUPER_ADMIN))
+        ->first();
+
+    expect($evaluation)->not->toBeNull();
+
+    $form = $evaluation->form()->with('questions')->first();
+    $answers = [];
+    foreach ($form->questions->where('is_enabled', true)->where('type', 'rating') as $question) {
+        $answers[$question->id] = ['rating' => 4];
+    }
+
+    app(EvaluationSubmissionService::class)->saveAnswers($evaluation, $answers, finalize: true);
+
     $zipPath = app(StaffReportZipExporter::class)->createZipForPeriod($this->period);
 
-  expect(file_exists($zipPath))->toBeTrue();
+    expect(file_exists($zipPath))->toBeTrue();
 
     $zip = new ZipArchive();
     expect($zip->open($zipPath))->toBeTrue();

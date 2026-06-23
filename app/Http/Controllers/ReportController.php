@@ -3,23 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Exports\StaffEvaluationReportExport;
+use App\Http\Requests\ReportCustomCsvRequest;
 use App\Models\College;
 use App\Models\EvaluationPeriod;
 use App\Models\StaffMember;
 use App\Models\User;
 use App\Services\Pdf\PdfDocumentBuilder;
 use App\Services\Reporting\EvaluationReportService;
+use App\Services\Reporting\ReportColumnCatalog;
+use App\Services\Reporting\StaffReportCsvExporter;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
     public function __construct(
         private readonly EvaluationReportService $reports,
         private readonly PdfDocumentBuilder $pdfBuilder,
+        private readonly ReportColumnCatalog $columnCatalog,
+        private readonly StaffReportCsvExporter $csvExporter,
     ) {
     }
 
@@ -40,6 +46,9 @@ class ReportController extends Controller
             'derivedMetricColumns'  => $derivedMetricColumns,
             'reportQuestionColumns' => $reportQuestionColumns,
             'scopedCollege'         => $collegeId ? College::find($collegeId) : null,
+            'csvColumns'            => $period && $request->user()->isSuperAdmin()
+                ? $this->columnCatalog->availableColumns($period)
+                : [],
         ]);
     }
 
@@ -112,6 +121,16 @@ class ReportController extends Controller
             compact('staff', 'period', 'pdfData'),
             $filename,
         );
+    }
+
+    public function exportCustomCsv(ReportCustomCsvRequest $request): StreamedResponse
+    {
+        $period = EvaluationPeriod::findOrFail($request->integer('period_id'));
+        $columns = $this->columnCatalog->resolveColumns($period, $request->input('columns', []));
+
+        abort_if($columns === [], 422);
+
+        return $this->csvExporter->download($period, $columns, $this->reportCollegeScope($request->user()));
     }
 
     public function exportExcel(Request $request): BinaryFileResponse
