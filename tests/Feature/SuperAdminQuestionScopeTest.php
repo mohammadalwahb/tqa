@@ -153,6 +153,19 @@ it('exports staff profile columns in custom csv', function () {
         ->toContain('Permanent');
 });
 
+it('exports all available catalog columns without error', function () {
+    $catalog = app(\App\Services\Reporting\ReportColumnCatalog::class);
+    $columns = array_column($catalog->availableColumns($this->period), 'key');
+
+    $this->actingAs($this->admin)
+        ->post(route('reports.export.csv'), [
+            'period_id' => $this->period->id,
+            'columns' => $columns,
+        ])
+        ->assertOk()
+        ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+});
+
 it('forbids coordinators from custom csv export', function () {
     $this->actingAs($this->coordinator)
         ->post(route('reports.export.csv'), [

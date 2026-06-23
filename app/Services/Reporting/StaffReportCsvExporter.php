@@ -23,13 +23,12 @@ class StaffReportCsvExporter
         ?int $collegeId = null,
     ): StreamedResponse {
         $columnKeys = array_column($selectedColumns, 'key');
-        $rows = $this->columns->needsFullProgress($columnKeys)
-            ? $this->reports->staffProgress($period, $collegeId)
-            : $this->reports->staffProgressSummary($period, $collegeId);
+        $needsDerivedMetrics = $this->columns->needsDerivedMetrics($columnKeys);
+        $rows = $this->reports->staffProgressSummary($period, $collegeId);
 
         $filename = "tqa-staff-report-{$period->id}.csv";
 
-        return response()->streamDownload(function () use ($rows, $selectedColumns) {
+        return response()->streamDownload(function () use ($rows, $selectedColumns, $needsDerivedMetrics, $period) {
             $handle = fopen('php://output', 'w');
             if ($handle === false) {
                 return;
@@ -39,6 +38,13 @@ class StaffReportCsvExporter
             fputcsv($handle, array_column($selectedColumns, 'label'));
 
             foreach ($rows as $row) {
+                if ($needsDerivedMetrics) {
+                    $analytics = $this->reports->staffAnalytics($row['staff'], $period);
+                    $row['derived_metrics'] = collect($analytics['extractions'] ?? [])
+                        ->keyBy('metric_id')
+                        ->all();
+                }
+
                 $line = [];
                 foreach ($selectedColumns as $column) {
                     $line[] = $this->columns->valueForColumn($row, $column['key']);

@@ -130,6 +130,8 @@ class ReportController extends Controller
 
         abort_if($columns === [], 422);
 
+        set_time_limit(0);
+
         return $this->csvExporter->download($period, $columns, $this->reportCollegeScope($request->user()));
     }
 

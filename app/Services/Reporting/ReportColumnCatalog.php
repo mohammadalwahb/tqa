@@ -103,6 +103,11 @@ class ReportColumnCatalog
 
     public function needsFullProgress(array $columnKeys): bool
     {
+        return $this->needsDerivedMetrics($columnKeys);
+    }
+
+    public function needsDerivedMetrics(array $columnKeys): bool
+    {
         return collect($columnKeys)->contains(fn (string $key) => str_starts_with($key, 'metric:'));
     }
 
@@ -118,7 +123,7 @@ class ReportColumnCatalog
             $key === 'full_name_ku'      => (string) ($staff->full_name_ku ?? ''),
             $key === 'email'             => (string) $staff->email,
             $key === 'gender'            => (string) ($staff->gender ?? ''),
-            $key === 'date_of_birth'     => $staff->date_of_birth?->toDateString() ?? '',
+            $key === 'date_of_birth'     => $this->formatDateValue($staff->getRawOriginal('date_of_birth')),
             $key === 'age'               => $staff->age === null ? '' : (string) $staff->age,
             $key === 'employee_type'     => (string) ($staff->employee_type ?? ''),
             $key === 'college'           => (string) ($staff->college?->name_en ?? $staff->department?->college?->name_en ?? ''),
@@ -188,5 +193,22 @@ class ReportColumnCatalog
         }
 
         return number_format((float) $metricData['value'], 2);
+    }
+
+    private function formatDateValue(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+
+        try {
+            if ($value instanceof \DateTimeInterface) {
+                return $value->format('Y-m-d');
+            }
+
+            return \Illuminate\Support\Carbon::parse((string) $value)->toDateString();
+        } catch (\Throwable) {
+            return '';
+        }
     }
 }
