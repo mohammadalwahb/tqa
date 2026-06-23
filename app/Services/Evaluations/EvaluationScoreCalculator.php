@@ -6,6 +6,7 @@ use App\Models\Committee;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use App\Models\EvaluationCategory;
+use App\Models\EvaluationForm;
 use App\Models\EvaluationPeriod;
 use App\Models\EvaluationQuestion;
 use App\Models\EvaluationScoreMetric;
@@ -125,6 +126,63 @@ class EvaluationScoreCalculator
             'by_category' => $byCategory,
             'by_question' => $byQuestion,
             'extractions' => $extractions,
+        ];
+    }
+
+    /**
+     * Certificate field values for a specific form (all derived metrics, no report filter).
+     *
+     * @return array{
+     *     extractions: array<int, array<string, mixed>>,
+     *     by_question: array<int, array<string, mixed>>
+     * }
+     */
+    public function certificateFieldData(StaffMember $staff, EvaluationPeriod $period, EvaluationForm $form): array
+    {
+        $evaluations = Evaluation::query()
+            ->with([
+                'answers.question',
+                'committee.members.user.roles',
+            ])
+            ->where('evaluatee_staff_id', $staff->id)
+            ->where('evaluation_period_id', $period->id)
+            ->where('status', Evaluation::STATUS_SUBMITTED)
+            ->get();
+
+        if ($evaluations->isEmpty()) {
+            return ['extractions' => [], 'by_question' => []];
+        }
+
+        $form->loadMissing([
+            'questions' => fn ($query) => $query->where('is_enabled', true)->orderBy('sort_order'),
+        ]);
+
+        $metrics = $form->scoreMetrics()
+            ->with(['questions', 'grades'])
+            ->orderBy('sort_order')
+            ->get();
+
+        $questionAggregates = $this->aggregateQuestions($evaluations, $form->questions);
+
+        $byQuestion = [];
+        foreach ($questionAggregates as $questionId => $row) {
+            if (! $row['question']->isScorable()) {
+                continue;
+            }
+            $byQuestion[$questionId] = [
+                'question_id' => $questionId,
+                'average'     => $row['average'],
+            ];
+        }
+
+        $extractions = [];
+        foreach ($this->buildExtractions($metrics, $questionAggregates, $staff) as $row) {
+            $extractions[(int) $row['metric_id']] = $row;
+        }
+
+        return [
+            'extractions' => $extractions,
+            'by_question' => $byQuestion,
         ];
     }
 

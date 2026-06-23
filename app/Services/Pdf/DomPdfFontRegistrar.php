@@ -117,6 +117,18 @@ class DomPdfFontRegistrar
         $options->set('enable_font_subsetting', true);
     }
 
+    /**
+     * Certificates use Latin layout (DejaVu Sans) so grades and numbers render reliably in PDF.
+     */
+    public static function prepareDompdfForCertificate(Dompdf $dompdf): void
+    {
+        self::ensureFontMetricsInstalled();
+
+        $options = $dompdf->getOptions();
+        $options->setDefaultFont('dejavu sans');
+        $options->set('enable_font_subsetting', true);
+    }
+
     public static function makeDompdf(): Dompdf
     {
         self::ensureFontDirectories();

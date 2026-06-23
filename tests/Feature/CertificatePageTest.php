@@ -175,3 +175,46 @@ it('allows super admin to preview staff certificate', function () {
         ->assertOk()
         ->assertSee($this->teacher->full_name_en);
 });
+
+it('renders derived metric values on certificate even when hidden from reports', function () {
+    $ratingQuestion = $this->form->questions()->where('type', 'rating')->where('is_enabled', true)->firstOrFail();
+
+    $metric = \App\Models\EvaluationScoreMetric::create([
+        'evaluation_form_id' => $this->form->id,
+        'name' => 'Teaching Grade',
+        'operation' => \App\Models\EvaluationScoreMetric::OPERATION_AVERAGE,
+        'show_in_reports' => false,
+        'sort_order' => 99,
+    ]);
+    $metric->questions()->sync([$ratingQuestion->id]);
+
+    \App\Models\EvaluationScoreMetricGrade::create([
+        'evaluation_score_metric_id' => $metric->id,
+        'label' => 'A',
+        'min_value' => 3.5,
+        'max_value' => 5,
+        'sort_order' => 1,
+    ]);
+
+    CertificateTemplate::create([
+        'evaluation_period_id' => $this->period->id,
+        'evaluation_form_id' => $this->form->id,
+        'layout' => ['fields' => [
+            ['key' => 'metric:' . $metric->id, 'x' => 100, 'y' => 300, 'width' => 120, 'height' => 48, 'font_size' => 24, 'font_weight' => 'bold', 'color' => '#000000', 'text_align' => 'center'],
+        ]],
+        'is_published' => true,
+        'created_by' => $this->admin->id,
+    ]);
+
+    $this->actingAs($this->teacherUser)
+        ->get(route('certificates.show', $this->period))
+        ->assertOk()
+        ->assertSee('A');
+
+    $response = $this->actingAs($this->teacherUser)
+        ->get(route('certificates.download.pdf', $this->period));
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('application/pdf');
+    expect(substr($response->getContent(), 0, 4))->toBe('%PDF');
+});

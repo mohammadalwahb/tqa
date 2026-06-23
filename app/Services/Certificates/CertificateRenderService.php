@@ -49,9 +49,9 @@ class CertificateRenderService
             $template->period,
         );
 
-        $analytics = $this->scores->staffAnalytics($staff, $template->period);
-        $extractions = collect($analytics['extractions'] ?? [])->keyBy('metric_id');
-        $questions = collect($analytics['by_question'] ?? [])->keyBy('question_id');
+        $certificateData = $this->scores->certificateFieldData($staff, $template->period, $template->form);
+        $extractions = collect($certificateData['extractions']);
+        $questions = collect($certificateData['by_question']);
 
         return collect($placed)->map(function (array $field) use ($staff, $extractions, $questions) {
             return array_merge($field, [
@@ -121,7 +121,7 @@ class CertificateRenderService
      */
     private function questionValue(\Illuminate\Support\Collection $questions, int $questionId): string
     {
-        $data = $questions->get($questionId);
+        $data = $questions->get($questionId) ?? $questions->get((string) $questionId);
         if (! $data) {
             return '';
         }
@@ -138,7 +138,7 @@ class CertificateRenderService
      */
     private function metricValue(\Illuminate\Support\Collection $extractions, int $metricId): string
     {
-        $data = $extractions->get($metricId);
+        $data = $extractions->get($metricId) ?? $extractions->get((string) $metricId);
         if (! $data) {
             return '';
         }

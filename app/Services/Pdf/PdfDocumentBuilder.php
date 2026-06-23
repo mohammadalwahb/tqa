@@ -26,7 +26,11 @@ class PdfDocumentBuilder
 
         /** @var PDF $pdf */
         $pdf = app(PDF::class);
-        DomPdfFontRegistrar::prepareDompdf($pdf->getDomPDF());
+        if ($this->isCertificatePdfView($view)) {
+            DomPdfFontRegistrar::prepareDompdfForCertificate($pdf->getDomPDF());
+        } else {
+            DomPdfFontRegistrar::prepareDompdf($pdf->getDomPDF());
+        }
         $pdf->loadHTML($html, 'UTF-8');
 
         return (string) $pdf->setPaper('a4', 'landscape')->output();
@@ -43,9 +47,18 @@ class PdfDocumentBuilder
 
         /** @var PDF $pdf */
         $pdf = app(PDF::class);
-        DomPdfFontRegistrar::prepareDompdf($pdf->getDomPDF());
+        if ($this->isCertificatePdfView($view)) {
+            DomPdfFontRegistrar::prepareDompdfForCertificate($pdf->getDomPDF());
+        } else {
+            DomPdfFontRegistrar::prepareDompdf($pdf->getDomPDF());
+        }
         $pdf->loadHTML($html, 'UTF-8');
 
         return $pdf->setPaper('a4', 'landscape');
+    }
+
+    private function isCertificatePdfView(string $view): bool
+    {
+        return str_starts_with($view, 'certificates.');
     }
 }

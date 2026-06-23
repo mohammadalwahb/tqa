@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <style>
         @page { margin: 0; }
         * { box-sizing: border-box; }
-        body { margin: 0; padding: 0; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'DejaVu Sans', sans-serif;
+            direction: ltr;
+        }
         .certificate-page {
             width: {{ $width }}px;
             height: {{ $height }}px;
@@ -26,9 +31,12 @@
             overflow: hidden;
             line-height: 1.25;
             word-wrap: break-word;
-            overflow-wrap: anywhere;
+            overflow-wrap: break-word;
             white-space: normal;
             box-sizing: border-box;
+            font-family: 'DejaVu Sans', sans-serif;
+            direction: ltr;
+            unicode-bidi: embed;
         }
     </style>
 </head>
@@ -39,7 +47,11 @@
                  style="left:{{ $field['x'] }}px;top:{{ $field['y'] }}px;width:{{ $field['width'] }}px;height:{{ $field['height'] ?? 48 }}px;
                         font-size:{{ $field['font_size'] }}px;font-weight:{{ $field['font_weight'] }};
                         color:{{ $field['color'] }};text-align:{{ $field['text_align'] }};">
-                @pdfText($field['value'])
+                @if(\App\Support\PdfTextHelper::containsArabicScript((string) ($field['value'] ?? '')))
+                    @pdfText($field['value'])
+                @else
+                    {{ $field['value'] }}
+                @endif
             </div>
         @endforeach
     </div>
