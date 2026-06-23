@@ -19,16 +19,23 @@
             </div>
             @if($period)
                 <div class="col-md-3 ms-auto">
-                    <a href="{{ route('super-admin.evaluations.export.zip', ['period_id' => $period->id]) }}"
-                       class="btn btn-outline-danger w-100">
-                        <i class="bi bi-file-earmark-zip"></i> {{ __('super_admin_evaluations.download_all_pdfs') }}
-                    </a>
+                    @if($zipStaffRows->isNotEmpty())
+                        <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#zipExportModal">
+                            <i class="bi bi-file-earmark-zip"></i> {{ __('super_admin_evaluations.download_all_pdfs') }}
+                        </button>
+                    @else
+                        <button type="button" class="btn btn-outline-danger w-100" disabled>
+                            <i class="bi bi-file-earmark-zip"></i> {{ __('super_admin_evaluations.download_all_pdfs') }}
+                        </button>
+                    @endif
                     <small class="text-muted d-block mt-1">{{ __('super_admin_evaluations.zip_submitted_only') }}</small>
                 </div>
             @endif
         </form>
     </div>
 </div>
+
+@include('super-admin.evaluations.partials.zip-export-modal')
 
 @if($period && ! $period->isOpen())
     <div class="alert alert-info">

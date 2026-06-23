@@ -254,6 +254,13 @@
     "super_admin_evaluations.zip_no_staff": "No staff evaluation data found for this period.",
     "super_admin_evaluations.zip_create_failed": "Could not create the ZIP archive.",
     "super_admin_evaluations.zip_submitted_only": "Includes staff with at least one submitted evaluation only.",
+    "super_admin_evaluations.zip_modal_title": "Download Staff PDFs (ZIP)",
+    "super_admin_evaluations.zip_modal_help": "Select the staff members to include in the ZIP archive.",
+    "super_admin_evaluations.select_all": "Select all",
+    "super_admin_evaluations.deselect_all": "Deselect all",
+    "super_admin_evaluations.download_zip": "Download ZIP",
+    "super_admin_evaluations.zip_no_staff_selected": "Select at least one staff member.",
+    "super_admin_evaluations.zip_invalid_staff": "One or more selected staff members are not eligible for export.",
 
     "committees.title": "Committees",
     "committees.create_btn": "Create Committee",

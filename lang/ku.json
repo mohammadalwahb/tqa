@@ -250,6 +250,13 @@
     "super_admin_evaluations.zip_no_staff": "هیچ داتای هەڵسەنگاندنی ستاف بۆ ئەم ماوەیە نەدۆزرایەوە.",
     "super_admin_evaluations.zip_create_failed": "نەتوانرا فایلی ZIP دروست بکرێت.",
     "super_admin_evaluations.zip_submitted_only": "تەنها ئەو ستافانە دەگرێتەوە کە لانیکەم یەک هەڵسەنگاندنی تەواوکراویان هەیە.",
+    "super_admin_evaluations.zip_modal_title": "PDFی ستافەکان دابگرە (ZIP)",
+    "super_admin_evaluations.zip_modal_help": "ئەو ستافانە هەڵبژێرە کە دەتەوێت لە ZIP دا بن.",
+    "super_admin_evaluations.select_all": "هەمووی هەڵبژێرە",
+    "super_admin_evaluations.deselect_all": "هەڵبژاردن لابەرە",
+    "super_admin_evaluations.download_zip": "ZIP دابگرە",
+    "super_admin_evaluations.zip_no_staff_selected": "لانیکەم یەک ستاف هەڵبژێرە.",
+    "super_admin_evaluations.zip_invalid_staff": "یەک یان زیاتر لە ستافە هەڵبژێردراوەکان شایستەی هەناردەکردن نین.",
 
     "committees.title": "کۆمیتەکان",
     "committees.create_btn": "دروستکردنی کۆمیتە",

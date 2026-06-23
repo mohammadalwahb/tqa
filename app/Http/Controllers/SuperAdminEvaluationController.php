@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SuperAdminStaffZipRequest;
 use App\Models\EvaluationPeriod;
 use App\Services\Evaluations\SuperAdminEvaluationAssignmentService;
 use App\Services\Reporting\StaffReportZipExporter;
@@ -25,21 +26,25 @@ class SuperAdminEvaluationController extends Controller
         $evaluations = $this->assignments->sharedEvaluationsForPeriod($period);
 
         return view('super-admin.evaluations.index', [
-            'period'      => $period,
-            'periods'     => EvaluationPeriod::orderByDesc('start_date')->get(),
-            'evaluations' => $evaluations,
+            'period'       => $period,
+            'periods'      => EvaluationPeriod::orderByDesc('start_date')->get(),
+            'evaluations'  => $evaluations,
+            'zipStaffRows' => $period ? $this->zipExporter->eligibleStaffRows($period) : collect(),
         ]);
     }
 
-    public function exportStaffPdfsZip(Request $request): BinaryFileResponse|RedirectResponse
+    public function exportStaffPdfsZip(SuperAdminStaffZipRequest $request): BinaryFileResponse|RedirectResponse
     {
-        $period = $this->resolvePeriod($request);
-        abort_unless($period, 404);
+        $period = EvaluationPeriod::findOrFail($request->validated('period_id'));
 
         set_time_limit(0);
 
         try {
-            $zipPath = $this->zipExporter->createZipForPeriod($period, submittedOnly: true);
+            $zipPath = $this->zipExporter->createZipForPeriod(
+                $period,
+                submittedOnly: true,
+                staffIds: $request->validated('staff_ids'),
+            );
         } catch (Throwable $e) {
             return back()->with('error', $e->getMessage());
         }

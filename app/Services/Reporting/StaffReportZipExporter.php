@@ -17,17 +17,36 @@ class StaffReportZipExporter
     }
 
     /**
+     * @return \Illuminate\Support\Collection<int, array{staff:\App\Models\StaffMember, required:int, completed:int, percentage:float, average:float|null, question_values:array<int, array<string, mixed>>}>
+     */
+    public function eligibleStaffRows(
+        EvaluationPeriod $period,
+        ?int $collegeId = null,
+        bool $submittedOnly = true,
+    ): \Illuminate\Support\Collection {
+        $staffRows = $this->reports->staffProgressSummary($period, $collegeId);
+
+        if ($submittedOnly) {
+            $staffRows = $staffRows->filter(fn (array $row) => (int) $row['completed'] > 0);
+        }
+
+        return $staffRows;
+    }
+
+    /**
      * @return string Absolute path to the zip file (caller should delete after send).
      */
     public function createZipForPeriod(
         EvaluationPeriod $period,
         ?int $collegeId = null,
         bool $submittedOnly = true,
+        ?array $staffIds = null,
     ): string {
-        $staffRows = $this->reports->staffProgressSummary($period, $collegeId);
+        $staffRows = $this->eligibleStaffRows($period, $collegeId, $submittedOnly);
 
-        if ($submittedOnly) {
-            $staffRows = $staffRows->filter(fn (array $row) => (int) $row['completed'] > 0);
+        if ($staffIds !== null) {
+            $allowed = array_flip(array_map('intval', $staffIds));
+            $staffRows = $staffRows->filter(fn (array $row) => isset($allowed[$row['staff']->id]));
         }
 
         if ($staffRows->isEmpty()) {

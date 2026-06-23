@@ -155,14 +155,41 @@ it('creates a zip archive with one pdf per staff member', function () {
 
     app(EvaluationSubmissionService::class)->saveAnswers($evaluation, $answers, finalize: true);
 
-    $zipPath = app(StaffReportZipExporter::class)->createZipForPeriod($this->period);
+    $zipPath = app(StaffReportZipExporter::class)->createZipForPeriod(
+        $this->period,
+        staffIds: [$this->teacher->id],
+    );
 
     expect(file_exists($zipPath))->toBeTrue();
 
     $zip = new ZipArchive();
     expect($zip->open($zipPath))->toBeTrue();
-    expect($zip->numFiles)->toBeGreaterThan(0);
+    expect($zip->numFiles)->toBe(1);
     $zip->close();
 
     @unlink($zipPath);
+});
+
+it('exports zip via post with selected staff only', function () {
+    $evaluation = Evaluation::query()
+        ->where('evaluation_period_id', $this->period->id)
+        ->where('evaluatee_staff_id', $this->teacher->id)
+        ->whereHas('evaluator.roles', fn ($q) => $q->where('name', RolePermissionSeeder::ROLE_SUPER_ADMIN))
+        ->first();
+
+    $form = $evaluation->form()->with('questions')->first();
+    $answers = [];
+    foreach ($form->questions->where('is_enabled', true)->where('type', 'rating') as $question) {
+        $answers[$question->id] = ['rating' => 4];
+    }
+
+    app(EvaluationSubmissionService::class)->saveAnswers($evaluation, $answers, finalize: true);
+
+    $this->actingAs($this->admin)
+        ->post(route('super-admin.evaluations.export.zip'), [
+            'period_id' => $this->period->id,
+            'staff_ids' => [$this->teacher->id],
+        ])
+        ->assertOk()
+        ->assertDownload("tqa-staff-reports-period-{$this->period->id}.zip");
 });

@@ -1,6 +1,6 @@
 @if(auth()->user()?->isSuperAdmin() && $period && !empty($csvColumns))
 <div class="modal fade" id="csvExportModal" tabindex="-1" aria-labelledby="csvExportModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form method="POST" action="{{ route('reports.export.csv') }}" id="csvExportForm">
                 @csrf
@@ -10,17 +10,19 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('common.close') }}"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted small">{{ __('reports.custom_csv_help') }}</p>
-                    <div id="csvColumnList" class="list-group">
-                        @foreach($csvColumns as $column)
-                            <div class="list-group-item d-flex align-items-center gap-2 csv-column-item" draggable="true">
-                                <span class="text-muted drag-handle" title="{{ __('reports.drag_to_reorder') }}"><i class="bi bi-grip-vertical"></i></span>
-                                <input class="form-check-input m-0" type="checkbox" value="{{ $column['key'] }}" checked>
-                                <span class="flex-grow-1">{{ $column['label'] }}</span>
-                                <button type="button" class="btn btn-sm btn-light move-up" title="{{ __('reports.move_up') }}"><i class="bi bi-arrow-up"></i></button>
-                                <button type="button" class="btn btn-sm btn-light move-down" title="{{ __('reports.move_down') }}"><i class="bi bi-arrow-down"></i></button>
-                            </div>
-                        @endforeach
+                    <p class="text-muted small mb-2">{{ __('reports.custom_csv_help') }}</p>
+                    <div class="export-scroll-panel border rounded">
+                        <div id="csvColumnList" class="list-group list-group-flush">
+                            @foreach($csvColumns as $column)
+                                <div class="list-group-item d-flex align-items-center gap-2 csv-column-item" draggable="true">
+                                    <span class="text-muted drag-handle" title="{{ __('reports.drag_to_reorder') }}"><i class="bi bi-grip-vertical"></i></span>
+                                    <input class="form-check-input m-0" type="checkbox" value="{{ $column['key'] }}" checked>
+                                    <span class="flex-grow-1">{{ $column['label'] }}</span>
+                                    <button type="button" class="btn btn-sm btn-light move-up" title="{{ __('reports.move_up') }}"><i class="bi bi-arrow-up"></i></button>
+                                    <button type="button" class="btn btn-sm btn-light move-down" title="{{ __('reports.move_down') }}"><i class="bi bi-arrow-down"></i></button>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">

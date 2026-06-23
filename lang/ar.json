@@ -250,6 +250,13 @@
     "super_admin_evaluations.zip_no_staff": "لا توجد بيانات تقييم للموظفين في هذه الفترة.",
     "super_admin_evaluations.zip_create_failed": "تعذر إنشاء ملف ZIP.",
     "super_admin_evaluations.zip_submitted_only": "يشمل الموظفين الذين لديهم تقييم مُسلَّم واحد على الأقل فقط.",
+    "super_admin_evaluations.zip_modal_title": "تنزيل تقارير PDF للموظفين (ZIP)",
+    "super_admin_evaluations.zip_modal_help": "اختر الموظفين المراد تضمينهم في ملف ZIP.",
+    "super_admin_evaluations.select_all": "تحديد الكل",
+    "super_admin_evaluations.deselect_all": "إلغاء تحديد الكل",
+    "super_admin_evaluations.download_zip": "تنزيل ZIP",
+    "super_admin_evaluations.zip_no_staff_selected": "يرجى تحديد موظف واحد على الأقل.",
+    "super_admin_evaluations.zip_invalid_staff": "واحد أو أكثر من الموظفين المحددين غير مؤهلين للتصدير.",
 
     "committees.title": "اللجان",
     "committees.create_btn": "إنشاء لجنة",

@@ -143,6 +143,12 @@
             [dir="rtl"] .tqa-sidebar.show { right: 0; left: auto; }
         }
         [dir="rtl"] body { font-family: 'Segoe UI', 'Noto Sans Arabic', 'Tahoma', system-ui, sans-serif; }
+
+        .export-scroll-panel {
+            max-height: min(60vh, 28rem);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 
     @stack('styles')

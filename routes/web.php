@@ -103,7 +103,7 @@ Route::middleware(['auth', 'active.user'])->group(function () {
 
         Route::get('super-admin/evaluations', [SuperAdminEvaluationController::class, 'index'])
             ->name('super-admin.evaluations.index');
-        Route::get('super-admin/evaluations/export-zip', [SuperAdminEvaluationController::class, 'exportStaffPdfsZip'])
+        Route::post('super-admin/evaluations/export-zip', [SuperAdminEvaluationController::class, 'exportStaffPdfsZip'])
             ->name('super-admin.evaluations.export.zip');
     });
 
