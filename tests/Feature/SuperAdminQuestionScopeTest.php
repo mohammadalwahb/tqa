@@ -126,6 +126,33 @@ it('allows super admin to export custom ordered csv from reports', function () {
     expect($response->headers->get('content-type'))->toContain('text/csv');
 });
 
+it('exports staff profile columns in custom csv', function () {
+    $this->teacher->update([
+        'full_name_ku' => 'مامۆستا تاقیکردنەوە',
+        'gender' => 'male',
+        'employee_type' => 'Permanent',
+        'qualification' => 'PhD',
+        'academic_title' => 'Professor',
+        'position' => 'Lecturer',
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->post(route('reports.export.csv'), [
+            'period_id' => $this->period->id,
+            'columns' => ['staff_name', 'full_name_ku', 'gender', 'qualification', 'employee_type'],
+        ]);
+
+    $response->assertOk();
+
+    $content = $response->streamedContent();
+    expect($content)
+        ->toContain($this->teacher->full_name_en)
+        ->toContain('مامۆستا تاقیکردنەوە')
+        ->toContain('male')
+        ->toContain('PhD')
+        ->toContain('Permanent');
+});
+
 it('forbids coordinators from custom csv export', function () {
     $this->actingAs($this->coordinator)
         ->post(route('reports.export.csv'), [

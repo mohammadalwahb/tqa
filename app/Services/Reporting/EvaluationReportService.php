@@ -75,7 +75,7 @@ class EvaluationReportService
             return collect();
         }
 
-        $staffMembers = StaffMember::with(['department.college'])
+        $staffMembers = StaffMember::with(['department.college', 'college', 'status'])
             ->whereIn('id', $stats->keys())
             ->orderBy('full_name_en')
             ->get();
@@ -273,7 +273,7 @@ class EvaluationReportService
             ->groupBy('evaluatee_staff_id');
 
         $staffMembersQuery = StaffMember::query()
-            ->with(['department.college'])
+            ->with(['department.college', 'college', 'status'])
             ->whereIn('id', $allEvaluationsByStaff->keys());
         if ($collegeId !== null) {
             $staffMembersQuery->where('college_id', $collegeId);
