@@ -36,6 +36,12 @@
             </a>
         @endcan
 
+        @can('certificates.view_own')
+            <a class="nav-link {{ request()->routeIs('certificates.*') ? 'active' : '' }}" href="{{ route('certificates.index') }}">
+                <i class="bi bi-award"></i> {{ __('nav.my_certificates') }}
+            </a>
+        @endcan
+
         @if(auth()->user()?->can('staff.manage_department') && !auth()->user()?->can('staff.manage'))
             <div class="nav-section">{{ __('nav.my_department') }}</div>
             <a class="nav-link {{ request()->routeIs('staff.*') ? 'active' : '' }}" href="{{ route('staff.index') }}">
@@ -89,6 +95,9 @@
         @role('Super Admin')
             <a class="nav-link {{ request()->routeIs('super-admin.evaluations.*') ? 'active' : '' }}" href="{{ route('super-admin.evaluations.index') }}">
                 <i class="bi bi-shield-check"></i> {{ __('nav.super_admin_evaluations') }}
+            </a>
+            <a class="nav-link {{ request()->routeIs('certificate-templates.*') ? 'active' : '' }}" href="{{ route('certificate-templates.index') }}">
+                <i class="bi bi-award"></i> {{ __('nav.certificates') }}
             </a>
             <a class="nav-link {{ request()->routeIs('super-admins.*') ? 'active' : '' }}" href="{{ route('super-admins.index') }}">
                 <i class="bi bi-shield-lock"></i> {{ __('nav.super_admins') }}

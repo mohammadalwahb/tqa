@@ -88,6 +88,7 @@ class LocaleHelper
             'Local Committee Member' => 'roles.local_committee',
             'HD Committee Member' => 'roles.hd_committee',
             'Department Head' => 'roles.department_head',
+            'Staff Member' => 'roles.staff_member',
             default => null,
         };
 

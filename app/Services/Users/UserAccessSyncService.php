@@ -16,6 +16,7 @@ class UserAccessSyncService
         RolePermissionSeeder::ROLE_LOCAL_COMMITTEE,
         RolePermissionSeeder::ROLE_HD_COMMITTEE,
         RolePermissionSeeder::ROLE_DEPARTMENT_HEAD,
+        RolePermissionSeeder::ROLE_STAFF_MEMBER,
     ];
 
     public function sync(User $user): void
@@ -69,6 +70,10 @@ class UserAccessSyncService
 
         if ($user->headedDepartment() !== null) {
             $roles[] = RolePermissionSeeder::ROLE_DEPARTMENT_HEAD;
+        }
+
+        if ($user->staff_member_id) {
+            $roles[] = RolePermissionSeeder::ROLE_STAFF_MEMBER;
         }
 
         return $roles;

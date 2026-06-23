@@ -34,6 +34,10 @@ class HomeController extends Controller
             return redirect()->route('reports.index');
         }
 
+        if ($user->can('certificates.view_own')) {
+            return redirect()->route('certificates.index');
+        }
+
         // Authenticated user without permissions — sign them out.
         auth()->logout();
         $request->session()->invalidate();

@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\CertificateTemplate;
 use App\Models\Evaluation;
 use App\Models\StaffMember;
+use App\Policies\CertificateTemplatePolicy;
 use App\Policies\EvaluationPolicy;
 use App\Policies\StaffMemberPolicy;
 use Illuminate\Pagination\Paginator;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
         DomPdfFontRegistrar::ensureFontDirectories();
 
         Gate::policy(Evaluation::class, EvaluationPolicy::class);
+        Gate::policy(CertificateTemplate::class, CertificateTemplatePolicy::class);
         Gate::policy(StaffMember::class, StaffMemberPolicy::class);
 
         Gate::before(function ($user, $ability) {

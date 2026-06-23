@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\ActivityLogController;
-use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\CertificateTemplateController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CollegeController;
 use App\Http\Controllers\CommitteeController;
@@ -105,6 +106,18 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             ->name('super-admin.evaluations.index');
         Route::post('super-admin/evaluations/export-zip', [SuperAdminEvaluationController::class, 'exportStaffPdfsZip'])
             ->name('super-admin.evaluations.export.zip');
+
+        Route::resource('certificate-templates', CertificateTemplateController::class)->except(['show']);
+        Route::post('certificate-templates/{certificate_template}/toggle-published', [CertificateTemplateController::class, 'togglePublished'])
+            ->name('certificate-templates.toggle-published');
+        Route::get('certificate-templates/{certificate_template}/background', [CertificateTemplateController::class, 'background'])
+            ->name('certificate-templates.background');
+        Route::get('certificate-templates/{certificate_template}/staff', [CertificateTemplateController::class, 'staffPicker'])
+            ->name('certificate-templates.staff-picker');
+        Route::get('certificate-templates/{certificate_template}/preview/{staff}', [CertificateTemplateController::class, 'preview'])
+            ->name('certificate-templates.preview');
+        Route::get('certificate-templates/{certificate_template}/export-pdf/{staff}', [CertificateTemplateController::class, 'exportPdf'])
+            ->name('certificate-templates.export.pdf');
     });
 
     // Users
@@ -169,5 +182,17 @@ Route::middleware(['auth', 'active.user'])->group(function () {
     // Activity Log
     Route::middleware('permission:activity_log.view')->group(function () {
         Route::get('activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+    });
+
+    Route::middleware('permission:certificates.view_own|certificates.manage')->group(function () {
+        Route::get('certificate-background/{period}', [CertificateController::class, 'background'])
+            ->name('certificates.background');
+    });
+
+    // Staff certificates
+    Route::middleware('permission:certificates.view_own')->group(function () {
+        Route::get('my-certificates', [CertificateController::class, 'index'])->name('certificates.index');
+        Route::get('my-certificates/{period}', [CertificateController::class, 'show'])->name('certificates.show');
+        Route::get('my-certificates/{period}/pdf', [CertificateController::class, 'downloadPdf'])->name('certificates.download.pdf');
     });
 });

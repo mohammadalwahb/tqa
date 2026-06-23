@@ -14,6 +14,7 @@ class RolePermissionSeeder extends Seeder
     public const ROLE_LOCAL_COMMITTEE      = 'Local Committee Member';
     public const ROLE_HD_COMMITTEE         = 'HD Committee Member';
     public const ROLE_DEPARTMENT_HEAD      = 'Department Head';
+    public const ROLE_STAFF_MEMBER         = 'Staff Member';
 
     public function run(): void
     {
@@ -45,6 +46,8 @@ class RolePermissionSeeder extends Seeder
             'reports.export',
             'dashboard.view',
             'activity_log.view',
+            'certificates.manage',
+            'certificates.view_own',
         ];
 
         foreach ($permissions as $p) {
@@ -85,6 +88,11 @@ class RolePermissionSeeder extends Seeder
         $departmentHead->syncPermissions([
             'staff.manage_department',
             'evaluations.view_own',
+        ]);
+
+        $staffMember = Role::firstOrCreate(['name' => self::ROLE_STAFF_MEMBER, 'guard_name' => 'web']);
+        $staffMember->syncPermissions([
+            'certificates.view_own',
         ]);
     }
 }
