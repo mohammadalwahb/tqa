@@ -17,6 +17,7 @@
     "nav.forms": "Forms",
     "nav.periods": "Evaluation Periods",
     "nav.super_admins": "Super Admins",
+    "nav.super_admin_evaluations": "Super Admin Evaluations",
     "nav.master_data": "Master Data CSV",
     "nav.administration": "Administration",
     "nav.coordinators": "Quality Coordinators",
@@ -244,6 +245,14 @@
     "super_admins.email_readonly": "Email cannot be changed after creation. User signs in via Google.",
     "super_admins.email_hint": "User will sign in via Google with this email (@uoz.edu.krd or @staff.uoz.edu.krd).",
     "super_admins.confirm_remove": "Remove Super Admin role from this user?",
+
+    "super_admin_evaluations.title": "Super Admin Evaluations",
+    "super_admin_evaluations.intro": "Institutional evaluations assigned to Super Admin. Any Super Admin may complete each staff member once.",
+    "super_admin_evaluations.empty": "No Super Admin evaluations for this period.",
+    "super_admin_evaluations.download_all_pdfs": "Download All Staff PDFs (ZIP)",
+    "super_admin_evaluations.closed_period_notice": "This evaluation period is closed for other users, but Super Admins may still complete these evaluations.",
+    "super_admin_evaluations.zip_no_staff": "No staff evaluation data found for this period.",
+    "super_admin_evaluations.zip_create_failed": "Could not create the ZIP archive.",
 
     "committees.title": "Committees",
     "committees.create_btn": "Create Committee",

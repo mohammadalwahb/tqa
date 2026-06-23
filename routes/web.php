@@ -22,6 +22,7 @@ use App\Http\Controllers\StaffLookupOptionController;
 use App\Http\Controllers\StaffMemberController;
 use App\Http\Controllers\StaffStatusController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\SuperAdminEvaluationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -99,6 +100,11 @@ Route::middleware(['auth', 'active.user'])->group(function () {
         Route::resource('super-admins', SuperAdminController::class)
             ->except(['show'])
             ->parameters(['super-admins' => 'super_admin']);
+
+        Route::get('super-admin/evaluations', [SuperAdminEvaluationController::class, 'index'])
+            ->name('super-admin.evaluations.index');
+        Route::get('super-admin/evaluations/export-zip', [SuperAdminEvaluationController::class, 'exportStaffPdfsZip'])
+            ->name('super-admin.evaluations.export.zip');
     });
 
     // Users

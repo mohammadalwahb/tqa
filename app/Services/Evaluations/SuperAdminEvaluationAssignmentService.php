@@ -5,6 +5,7 @@ namespace App\Services\Evaluations;
 use App\Models\Committee;
 use App\Models\Department;
 use App\Models\Evaluation;
+use App\Models\EvaluationPeriod;
 use App\Services\Committees\LocalCommitteeEvaluateeResolver;
 use App\Models\EvaluationForm;
 use App\Models\StaffMember;
@@ -110,6 +111,25 @@ class SuperAdminEvaluationAssignmentService
         }
 
         return $this->createEvaluations($committee, collect([$staff]));
+    }
+
+    /**
+     * @return Collection<int, Evaluation>
+     */
+    public function sharedEvaluationsForPeriod(?EvaluationPeriod $period = null): Collection
+    {
+        $superAdminIds = $this->superAdminUserIds();
+
+        if ($superAdminIds->isEmpty()) {
+            return collect();
+        }
+
+        return Evaluation::query()
+            ->with(['evaluatee.department.college', 'committee', 'period'])
+            ->whereIn('evaluator_user_id', $superAdminIds)
+            ->when($period, fn ($query) => $query->where('evaluation_period_id', $period->id))
+            ->orderByDesc('id')
+            ->get();
     }
 
     /**

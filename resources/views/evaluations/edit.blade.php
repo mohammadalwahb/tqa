@@ -24,7 +24,7 @@
                 · {{ $evaluation->committee->name ?? '#' . $evaluation->committee_id }}
             </div>
         </div>
-        <a href="{{ route('evaluations.index') }}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> {{ __('common.back') }}</a>
+        <a href="{{ $returnRoute ?? route('evaluations.index') }}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> {{ __('common.back') }}</a>
     </div>
 </div>
 
@@ -97,7 +97,10 @@
                 <i class="bi bi-check2-circle"></i> {{ __('evaluations.submit') }}
             </button>
         @endif
-        <a href="{{ route('evaluations.index') }}" class="btn btn-light">{{ __('common.cancel') }}</a>
+        @if(request('from') === 'super-admin')
+            <input type="hidden" name="from" value="super-admin">
+        @endif
+        <a href="{{ $returnRoute ?? route('evaluations.index') }}" class="btn btn-light">{{ __('common.cancel') }}</a>
     </div>
 </form>
 
@@ -116,7 +119,7 @@
         }).then((r) => {
             if (!r.isConfirmed) return;
             const form = document.getElementById('evalForm');
-            form.action = "{{ route('evaluations.submit', $evaluation) }}";
+            form.action = @json(route('evaluations.submit', $evaluation) . (request('from') === 'super-admin' ? '?from=super-admin' : ''));
             const methodInput = form.querySelector('input[name=_method]');
             if (methodInput) methodInput.remove();
             form.submit();

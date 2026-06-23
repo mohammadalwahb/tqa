@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Evaluation;
 use App\Services\Evaluations\EvaluationSubmissionService;
+use App\Services\Evaluations\SuperAdminEvaluationAssignmentService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,8 +13,10 @@ use Throwable;
 
 class EvaluationController extends Controller
 {
-    public function __construct(private readonly EvaluationSubmissionService $submission)
-    {
+    public function __construct(
+        private readonly EvaluationSubmissionService $submission,
+        private readonly SuperAdminEvaluationAssignmentService $superAdminEvaluations,
+    ) {
     }
 
     public function index(Request $request): View
@@ -58,7 +61,7 @@ class EvaluationController extends Controller
         return view('evaluations.show', compact('evaluation'));
     }
 
-    public function edit(Evaluation $evaluation): View|RedirectResponse
+    public function edit(Request $request, Evaluation $evaluation): View|RedirectResponse
     {
         $this->authorize('update', $evaluation);
 
@@ -85,12 +88,14 @@ class EvaluationController extends Controller
             ->values();
 
         $answersByQuestion = $evaluation->answers->keyBy('evaluation_question_id');
+        $returnRoute       = $this->evaluationReturnRoute($request, $evaluation);
 
         return view('evaluations.edit', [
             'evaluation'        => $evaluation,
             'visibleQuestions'  => $visibleQuestions,
             'answersByQuestion' => $answersByQuestion,
             'adminEdit'         => $adminEdit,
+            'returnRoute'       => $returnRoute,
         ]);
     }
 
@@ -132,6 +137,25 @@ class EvaluationController extends Controller
             return back()->with('error', $e->getMessage())->withInput();
         }
 
-        return redirect()->route('evaluations.index')->with('success', __('messages.evaluation_submitted'));
+        return redirect()->to($this->evaluationReturnUrl($request, $evaluation))
+            ->with('success', __('messages.evaluation_submitted'));
+    }
+
+    private function evaluationReturnRoute(Request $request, Evaluation $evaluation): string
+    {
+        return $request->query('from') === 'super-admin'
+            ? route('super-admin.evaluations.index', ['period_id' => $evaluation->evaluation_period_id])
+            : route('evaluations.index');
+    }
+
+    private function evaluationReturnUrl(Request $request, Evaluation $evaluation): string
+    {
+        if ($request->query('from') === 'super-admin') {
+            return route('super-admin.evaluations.index', [
+                'period_id' => $evaluation->evaluation_period_id,
+            ]);
+        }
+
+        return route('evaluations.index');
     }
 }

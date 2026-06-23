@@ -17,6 +17,7 @@
     "nav.forms": "النماذج",
     "nav.periods": "فترات التقييم",
     "nav.super_admins": "المشرفون العامون",
+    "nav.super_admin_evaluations": "تقييمات المشرف العام",
     "nav.master_data": "البيانات الرئيسية CSV",
     "nav.administration": "الإدارة",
     "nav.coordinators": "منسقو الجودة",
@@ -240,6 +241,14 @@
     "super_admins.email_readonly": "لا يمكن تغيير البريد بعد الإنشاء. يسجّل المستخدم الدخول عبر Google.",
     "super_admins.email_hint": "سيسجّل المستخدم الدخول عبر Google بهذا البريد (@uoz.edu.krd أو @staff.uoz.edu.krd).",
     "super_admins.confirm_remove": "إزالة دور المشرف العام من هذا المستخدم؟",
+
+    "super_admin_evaluations.title": "تقييمات المشرف العام",
+    "super_admin_evaluations.intro": "التقييمات المؤسسية المخصصة للمشرف العام. يمكن لأي مشرف عام إكمال تقييم كل موظف مرة واحدة.",
+    "super_admin_evaluations.empty": "لا توجد تقييمات للمشرف العام في هذه الفترة.",
+    "super_admin_evaluations.download_all_pdfs": "تنزيل جميع تقارير PDF للموظفين (ZIP)",
+    "super_admin_evaluations.closed_period_notice": "فترة التقييم مغلقة للمستخدمين الآخرين، لكن المشرف العام لا يزال يمكنه إكمال هذه التقييمات.",
+    "super_admin_evaluations.zip_no_staff": "لا توجد بيانات تقييم للموظفين في هذه الفترة.",
+    "super_admin_evaluations.zip_create_failed": "تعذر إنشاء ملف ZIP.",
 
     "committees.title": "اللجان",
     "committees.create_btn": "إنشاء لجنة",

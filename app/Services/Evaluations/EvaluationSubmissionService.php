@@ -5,11 +5,18 @@ namespace App\Services\Evaluations;
 use App\Models\Evaluation;
 use App\Models\EvaluationAnswer;
 use App\Models\EvaluationQuestion;
+use App\Services\Evaluations\SuperAdminEvaluationAssignmentService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
 class EvaluationSubmissionService
 {
+    public function __construct(
+        private readonly SuperAdminEvaluationAssignmentService $superAdminEvaluations,
+    ) {
+    }
+
     /**
      * @param array<int, array{rating?:int|null, number?:float|null, text?:string|null}> $answers
      */
@@ -21,13 +28,15 @@ class EvaluationSubmissionService
     ): Evaluation {
         $period = $evaluation->period;
 
-        if (! $adminOverride) {
+        if (! $adminOverride && ! $this->mayBypassClosedPeriod($evaluation)) {
             if (! $period || ! $period->isOpen()) {
                 throw new RuntimeException(__('messages.evaluation_period_closed'));
             }
             if ($evaluation->isSubmitted()) {
                 throw new RuntimeException(__('messages.evaluation_locked'));
             }
+        } elseif (! $adminOverride && $evaluation->isSubmitted()) {
+            throw new RuntimeException(__('messages.evaluation_locked'));
         }
 
         if ($adminOverride && $finalize) {
@@ -120,5 +129,13 @@ class EvaluationSubmissionService
         });
 
         return $evaluation->fresh(['answers']);
+    }
+
+    private function mayBypassClosedPeriod(Evaluation $evaluation): bool
+    {
+        $user = Auth::user();
+
+        return $user?->isSuperAdmin()
+            && $this->superAdminEvaluations->isSharedSuperAdminEvaluation($evaluation);
     }
 }

@@ -17,6 +17,7 @@
     "nav.forms": "فۆرمەکان",
     "nav.periods": "ماوەکانی هەڵسەنگاندن",
     "nav.super_admins": "سوپەر ئەدمینەکان",
+    "nav.super_admin_evaluations": "هەڵسەنگاندنەکانی سوپەر ئەدمین",
     "nav.master_data": "داتای سەرەکی CSV",
     "nav.administration": "بەڕێوەبردن",
     "nav.coordinators": "هاوکارییەکانی کوالیتی",
@@ -240,6 +241,14 @@
     "super_admins.email_readonly": "ئیمەیڵ دوای دروستکردن ناگۆڕدرێت. بەکارهێنەر لە ڕێگەی گووگڵ دەچێتە ژوورەوە.",
     "super_admins.email_hint": "بەکارهێنەر لە ڕێگەی گووگڵ بەم ئیمەیڵە دەچێتە ژوورەوە (@uoz.edu.krd یان @staff.uoz.edu.krd).",
     "super_admins.confirm_remove": "ڕۆڵی سوپەر ئەدمین لەم بەکارهێنەرە لاببرێت؟",
+
+    "super_admin_evaluations.title": "هەڵسەنگاندنەکانی سوپەر ئەدمین",
+    "super_admin_evaluations.intro": "هەڵسەنگاندنە دامەزرێنەراییەکان بۆ سوپەر ئەدمین. هەر سوپەر ئەدمینێک دەتوانێت هەر ستافێک جارێک تەواوی بکات.",
+    "super_admin_evaluations.empty": "هیچ هەڵسەنگاندنی سوپەر ئەدمین بۆ ئەم ماوەیە نییە.",
+    "super_admin_evaluations.download_all_pdfs": "هەموو PDFی ستافەکان دابگرە (ZIP)",
+    "super_admin_evaluations.closed_period_notice": "ئەم ماوەی هەڵسەنگاندنە بۆ بەکارهێنەرانی تر داخراوە، بەڵام سوپەر ئەدمین هێشتا دەتوانێت ئەم هەڵسەنگاندنانە تەواو بکات.",
+    "super_admin_evaluations.zip_no_staff": "هیچ داتای هەڵسەنگاندنی ستاف بۆ ئەم ماوەیە نەدۆزرایەوە.",
+    "super_admin_evaluations.zip_create_failed": "نەتوانرا فایلی ZIP دروست بکرێت.",
 
     "committees.title": "کۆمیتەکان",
     "committees.create_btn": "دروستکردنی کۆمیتە",

@@ -87,6 +87,9 @@
         @endcanany
 
         @role('Super Admin')
+            <a class="nav-link {{ request()->routeIs('super-admin.evaluations.*') ? 'active' : '' }}" href="{{ route('super-admin.evaluations.index') }}">
+                <i class="bi bi-shield-check"></i> {{ __('nav.super_admin_evaluations') }}
+            </a>
             <a class="nav-link {{ request()->routeIs('super-admins.*') ? 'active' : '' }}" href="{{ route('super-admins.index') }}">
                 <i class="bi bi-shield-lock"></i> {{ __('nav.super_admins') }}
             </a>

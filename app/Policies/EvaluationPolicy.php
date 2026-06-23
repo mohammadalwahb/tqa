@@ -49,6 +49,10 @@ class EvaluationPolicy
 
         $period = $evaluation->period;
 
+        if ($isSharedSuperAdmin && $user->isSuperAdmin()) {
+            return (bool) $period;
+        }
+
         return $period && $period->isOpen();
     }
 }
