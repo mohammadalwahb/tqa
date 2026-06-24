@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CertificateBulkPdfRequest;
 use App\Http\Requests\CertificateTemplateRequest;
 use App\Models\CertificateTemplate;
 use App\Models\EvaluationPeriod;
 use App\Models\EvaluationForm;
 use App\Models\StaffMember;
+use App\Services\Certificates\CertificateBulkPdfService;
 use App\Services\Certificates\CertificateFieldCatalog;
 use App\Services\Certificates\CertificateRenderService;
 use App\Services\Certificates\CertificateTemplateService;
@@ -16,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CertificateTemplateController extends Controller
@@ -24,6 +27,7 @@ class CertificateTemplateController extends Controller
         private readonly CertificateTemplateService $templates,
         private readonly CertificateFieldCatalog $fields,
         private readonly CertificateRenderService $renderer,
+        private readonly CertificateBulkPdfService $bulkPdf,
         private readonly PdfDocumentBuilder $pdf,
     ) {
     }
@@ -161,6 +165,30 @@ class CertificateTemplateController extends Controller
         );
 
         return $this->pdf->download('certificates.pdf', $data, $filename);
+    }
+
+    public function exportBulkPdf(CertificateBulkPdfRequest $request, CertificateTemplate $certificateTemplate): Response|RedirectResponse
+    {
+        $this->authorize('view', $certificateTemplate);
+
+        set_time_limit(0);
+
+        try {
+            $data = $this->bulkPdf->buildBulkViewData(
+                $certificateTemplate,
+                $request->resolvedStaffIds($certificateTemplate),
+            );
+        } catch (InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        $filename = sprintf(
+            'certificates-%s-period-%d.pdf',
+            str($certificateTemplate->period->name)->slug(),
+            $certificateTemplate->evaluation_period_id,
+        );
+
+        return $this->pdf->download('certificates.bulk-pdf', $data, $filename);
     }
 
     public function staffPicker(CertificateTemplate $certificateTemplate): View

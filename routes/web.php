@@ -119,6 +119,8 @@ Route::middleware(['auth', 'active.user'])->group(function () {
             ->name('certificate-templates.preview');
         Route::get('certificate-templates/{certificate_template}/export-pdf/{staff}', [CertificateTemplateController::class, 'exportPdf'])
             ->name('certificate-templates.export.pdf');
+        Route::post('certificate-templates/{certificate_template}/export-pdf-bulk', [CertificateTemplateController::class, 'exportBulkPdf'])
+            ->name('certificate-templates.export.pdf-bulk');
     });
 
     // Users

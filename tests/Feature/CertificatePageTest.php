@@ -240,3 +240,65 @@ it('keeps certificate pdf on a single page when fields are near the bottom edge'
 
     expect(count($pages[0]))->toBe(1);
 });
+
+it('allows super admin to download all staff certificates as one pdf', function () {
+    $template = CertificateTemplate::create([
+        'evaluation_period_id' => $this->period->id,
+        'evaluation_form_id' => $this->form->id,
+        'layout' => ['fields' => [
+            ['key' => 'full_name_en', 'x' => 100, 'y' => 200, 'width' => 400, 'font_size' => 28, 'font_weight' => 'bold', 'color' => '#000000', 'text_align' => 'center'],
+        ]],
+        'is_published' => true,
+        'created_by' => $this->admin->id,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->get(route('certificate-templates.staff-picker', $template))
+        ->assertOk()
+        ->assertSee(__('certificates.download_all_pdf'));
+
+    $response = $this->actingAs($this->admin)
+        ->post(route('certificate-templates.export.pdf-bulk', $template), [
+            'download_all' => 1,
+        ]);
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('application/pdf');
+    expect(substr($response->getContent(), 0, 4))->toBe('%PDF');
+});
+
+it('allows super admin to download selected staff certificates as one pdf', function () {
+    $template = CertificateTemplate::create([
+        'evaluation_period_id' => $this->period->id,
+        'evaluation_form_id' => $this->form->id,
+        'layout' => ['fields' => [
+            ['key' => 'full_name_en', 'x' => 100, 'y' => 200, 'width' => 400, 'font_size' => 28, 'font_weight' => 'bold', 'color' => '#000000', 'text_align' => 'center'],
+        ]],
+        'is_published' => true,
+        'created_by' => $this->admin->id,
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->post(route('certificate-templates.export.pdf-bulk', $template), [
+            'staff_ids' => [$this->teacher->id],
+        ]);
+
+    $response->assertOk();
+    expect($response->headers->get('content-type'))->toContain('application/pdf');
+});
+
+it('rejects bulk certificate export for ineligible staff', function () {
+    $template = CertificateTemplate::create([
+        'evaluation_period_id' => $this->period->id,
+        'evaluation_form_id' => $this->form->id,
+        'layout' => ['fields' => []],
+        'is_published' => true,
+        'created_by' => $this->admin->id,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->post(route('certificate-templates.export.pdf-bulk', $template), [
+            'staff_ids' => [$this->other->id],
+        ])
+        ->assertSessionHasErrors('staff_ids');
+});
