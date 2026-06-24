@@ -15,6 +15,7 @@
                 <form method="POST" action="{{ route('certificate-templates.export.pdf-bulk', $template) }}" id="bulkPdfForm" class="d-flex flex-wrap gap-2">
                     @csrf
                     <input type="hidden" name="download_all" value="0" id="bulkDownloadAll">
+                    <div id="bulkPdfStaffIds"></div>
                     <button type="button" class="btn btn-sm btn-danger" id="bulkDownloadSelectedBtn">
                         <i class="bi bi-file-earmark-pdf"></i> {{ __('certificates.download_selected_pdf') }}
                     </button>
@@ -63,6 +64,7 @@
                     : __('certificates.bulk_no_staff') }}
             </p>
         @else
+            <div id="certStaffPicker" data-all-staff-ids='@json($staffRows->pluck('staff.id')->values())'>
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="certSelectAll">
                     {{ __('certificates.select_all') }}
@@ -71,7 +73,7 @@
                     {{ __('certificates.deselect_all') }}
                 </button>
             </div>
-            <table class="table align-middle datatable">
+            <table class="table align-middle datatable" id="certStaffTable">
                 <thead class="table-light">
                     <tr>
                         <th style="width:2.5rem;">
@@ -88,7 +90,7 @@
                     @php $staff = $row['staff']; @endphp
                     <tr>
                         <td>
-                            <input class="form-check-input cert-staff-checkbox" type="checkbox" name="staff_ids[]" value="{{ $staff->id }}" form="bulkPdfForm" checked>
+                            <input class="form-check-input cert-staff-checkbox" type="checkbox" value="{{ $staff->id }}" checked>
                         </td>
                         <td>{{ $staff->full_name_en }}</td>
                         <td>{{ \App\Support\LocaleHelper::collegeDisplayName($staff->college ?? $staff->department?->college) }}</td>
@@ -105,6 +107,7 @@
                 @endforeach
                 </tbody>
             </table>
+            </div>
         @endif
     </div>
 </div>
@@ -116,54 +119,100 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('bulkPdfForm');
+    const picker = document.getElementById('certStaffPicker');
     const tableBody = document.getElementById('certStaffTableBody');
-    if (!form || !tableBody) return;
+    if (!form || !picker || !tableBody) return;
 
-    const checkboxes = () => tableBody.querySelectorAll('.cert-staff-checkbox');
+    const allStaffIds = JSON.parse(picker.dataset.allStaffIds || '[]').map(function (id) {
+        return parseInt(id, 10);
+    });
+    const selectedIds = new Set(allStaffIds);
     const headerToggle = document.getElementById('certSelectAllToggle');
+    const staffIdsContainer = document.getElementById('bulkPdfStaffIds');
+    const tableEl = document.getElementById('certStaffTable');
 
-    function setAll(checked) {
-        checkboxes().forEach(function (checkbox) {
-            checkbox.checked = checked;
+    function syncHeaderToggle() {
+        if (!headerToggle) return;
+        headerToggle.checked = allStaffIds.length > 0 && allStaffIds.every(function (id) {
+            return selectedIds.has(id);
         });
-        if (headerToggle) {
-            headerToggle.checked = checked;
-        }
     }
 
+    function syncVisibleCheckboxes() {
+        tableBody.querySelectorAll('.cert-staff-checkbox').forEach(function (checkbox) {
+            const id = parseInt(checkbox.value, 10);
+            checkbox.checked = selectedIds.has(id);
+        });
+        syncHeaderToggle();
+    }
+
+    function setSelectionForAll(checked) {
+        if (checked) {
+            allStaffIds.forEach(function (id) {
+                selectedIds.add(id);
+            });
+        } else {
+            selectedIds.clear();
+        }
+        syncVisibleCheckboxes();
+    }
+
+    function writeSelectedStaffIdsToForm() {
+        if (!staffIdsContainer) return;
+        staffIdsContainer.innerHTML = '';
+        selectedIds.forEach(function (id) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'staff_ids[]';
+            input.value = String(id);
+            staffIdsContainer.appendChild(input);
+        });
+    }
+
+    tableBody.addEventListener('change', function (event) {
+        const checkbox = event.target;
+        if (!checkbox.classList.contains('cert-staff-checkbox')) return;
+
+        const id = parseInt(checkbox.value, 10);
+        if (checkbox.checked) {
+            selectedIds.add(id);
+        } else {
+            selectedIds.delete(id);
+        }
+        syncHeaderToggle();
+    });
+
     document.getElementById('certSelectAll')?.addEventListener('click', function () {
-        setAll(true);
+        setSelectionForAll(true);
     });
 
     document.getElementById('certDeselectAll')?.addEventListener('click', function () {
-        setAll(false);
+        setSelectionForAll(false);
     });
 
     headerToggle?.addEventListener('change', function () {
-        setAll(headerToggle.checked);
+        setSelectionForAll(headerToggle.checked);
     });
 
-    checkboxes().forEach(function (checkbox) {
-        checkbox.addEventListener('change', function () {
-            const all = Array.from(checkboxes());
-            if (headerToggle) {
-                headerToggle.checked = all.length > 0 && all.every(function (item) { return item.checked; });
-            }
-        });
-    });
+    if (tableEl && window.jQuery && jQuery.fn.dataTable && jQuery.fn.dataTable.isDataTable(tableEl)) {
+        jQuery(tableEl).on('draw.dt', syncVisibleCheckboxes);
+    }
 
     document.getElementById('bulkDownloadSelectedBtn')?.addEventListener('click', function () {
-        const selected = tableBody.querySelectorAll('.cert-staff-checkbox:checked');
-        if (selected.length === 0) {
+        if (selectedIds.size === 0) {
             alert(@json(__('certificates.bulk_no_staff_selected')));
             return;
         }
         document.getElementById('bulkDownloadAll').value = '0';
+        writeSelectedStaffIdsToForm();
         form.submit();
     });
 
     document.getElementById('bulkDownloadAllBtn')?.addEventListener('click', function () {
         document.getElementById('bulkDownloadAll').value = '1';
+        if (staffIdsContainer) {
+            staffIdsContainer.innerHTML = '';
+        }
         form.submit();
     });
 });
