@@ -7,6 +7,7 @@ use App\Models\Evaluation;
 use App\Models\EvaluationPeriod;
 use App\Models\StaffMember;
 use App\Services\Evaluations\EvaluationScoreCalculator;
+use App\Support\NumberDisplay;
 use Illuminate\Support\Str;
 
 class CertificateRenderService
@@ -130,7 +131,7 @@ class CertificateRenderService
             return '';
         }
 
-        return number_format((float) $data['average'], 2);
+        return NumberDisplay::formatScore((float) $data['average']);
     }
 
     /**
@@ -151,7 +152,7 @@ class CertificateRenderService
             return '';
         }
 
-        return number_format((float) $data['value'], 2);
+        return NumberDisplay::formatScore((float) $data['value']);
     }
 
     /**
