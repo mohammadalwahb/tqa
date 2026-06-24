@@ -302,3 +302,47 @@ it('rejects bulk certificate export for ineligible staff', function () {
         ])
         ->assertSessionHasErrors('staff_ids');
 });
+
+it('filters staff certificates by college and department', function () {
+    $template = CertificateTemplate::create([
+        'evaluation_period_id' => $this->period->id,
+        'evaluation_form_id' => $this->form->id,
+        'layout' => ['fields' => []],
+        'is_published' => true,
+        'created_by' => $this->admin->id,
+    ]);
+
+    $otherCollege = \App\Models\College::create(['name_en' => 'Other College', 'is_active' => true]);
+
+    $this->actingAs($this->admin)
+        ->get(route('certificate-templates.staff-picker', [
+            'certificate_template' => $template,
+            'college_id' => $otherCollege->id,
+        ]))
+        ->assertOk()
+        ->assertDontSee($this->teacher->full_name_en);
+
+    $this->actingAs($this->admin)
+        ->get(route('certificate-templates.staff-picker', [
+            'certificate_template' => $template,
+            'college_id' => $this->college->id,
+        ]))
+        ->assertOk()
+        ->assertSee($this->teacher->full_name_en);
+
+    $this->actingAs($this->admin)
+        ->get(route('certificate-templates.staff-picker', [
+            'certificate_template' => $template,
+            'department_id' => $this->deptB->id,
+        ]))
+        ->assertOk()
+        ->assertDontSee($this->teacher->full_name_en);
+
+    $this->actingAs($this->admin)
+        ->get(route('certificate-templates.staff-picker', [
+            'certificate_template' => $template,
+            'department_id' => $this->deptA->id,
+        ]))
+        ->assertOk()
+        ->assertSee($this->teacher->full_name_en);
+});

@@ -26,8 +26,42 @@
         </div>
     </div>
     <div class="card-body">
+        <form method="GET" class="d-flex gap-2 align-items-center flex-wrap mb-3">
+            <div class="d-flex gap-2" data-college-department-filter>
+                <select name="college_id" data-college-select class="form-select form-select-sm">
+                    <option value="">{{ __('common.all_colleges') }}</option>
+                    @foreach($colleges as $college)
+                        <option value="{{ $college->id }}" @selected((int) request('college_id') === $college->id)>
+                            {{ \App\Support\LocaleHelper::collegeDisplayName($college) }}
+                        </option>
+                    @endforeach
+                </select>
+                <select name="department_id" data-department-select class="form-select form-select-sm">
+                    <option value="">{{ __('common.all_departments') }}</option>
+                    @foreach($departments as $department)
+                        <option value="{{ $department->id }}" data-college-id="{{ $department->college_id }}"
+                            @selected((int) request('department_id') === $department->id)>
+                            {{ \App\Support\LocaleHelper::departmentDisplayName($department) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-funnel"></i>
+            </button>
+            @if(request()->filled('college_id') || request()->filled('department_id'))
+                <a href="{{ route('certificate-templates.staff-picker', $template) }}" class="btn btn-sm btn-outline-secondary">
+                    {{ __('certificates.clear_filters') }}
+                </a>
+            @endif
+        </form>
+
         @if($staffRows->isEmpty())
-            <p class="text-muted mb-0">{{ __('certificates.bulk_no_staff') }}</p>
+            <p class="text-muted mb-0">
+                {{ request()->filled('college_id') || request()->filled('department_id')
+                    ? __('common.no_matching')
+                    : __('certificates.bulk_no_staff') }}
+            </p>
         @else
             <div class="d-flex flex-wrap gap-2 mb-3">
                 <button type="button" class="btn btn-sm btn-outline-secondary" id="certSelectAll">
@@ -44,6 +78,7 @@
                             <input class="form-check-input" type="checkbox" id="certSelectAllToggle" checked aria-label="{{ __('certificates.select_all') }}">
                         </th>
                         <th>{{ __('staff.full_name_en') }}</th>
+                        <th>{{ __('common.college') }}</th>
                         <th>{{ __('common.department') }}</th>
                         <th class="text-end">{{ __('common.actions') }}</th>
                     </tr>
@@ -56,7 +91,8 @@
                             <input class="form-check-input cert-staff-checkbox" type="checkbox" name="staff_ids[]" value="{{ $staff->id }}" form="bulkPdfForm" checked>
                         </td>
                         <td>{{ $staff->full_name_en }}</td>
-                        <td>{{ $staff->department?->name_en }}</td>
+                        <td>{{ \App\Support\LocaleHelper::collegeDisplayName($staff->college ?? $staff->department?->college) }}</td>
+                        <td>{{ \App\Support\LocaleHelper::departmentDisplayName($staff->department) }}</td>
                         <td class="text-end text-nowrap">
                             <a href="{{ route('certificate-templates.preview', [$template, $staff]) }}" class="btn btn-sm btn-outline-primary" target="_blank">
                                 <i class="bi bi-image"></i> {{ __('certificates.view') }}
@@ -73,6 +109,8 @@
     </div>
 </div>
 @endsection
+
+@include('partials.college-department-filter')
 
 @push('scripts')
 <script>

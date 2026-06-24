@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CertificateBulkPdfRequest;
 use App\Http\Requests\CertificateTemplateRequest;
 use App\Models\CertificateTemplate;
+use App\Models\College;
+use App\Models\Department;
 use App\Models\EvaluationPeriod;
 use App\Models\EvaluationForm;
 use App\Models\StaffMember;
@@ -191,17 +193,31 @@ class CertificateTemplateController extends Controller
         return $this->pdf->download('certificates.bulk-pdf', $data, $filename);
     }
 
-    public function staffPicker(CertificateTemplate $certificateTemplate): View
+    public function staffPicker(Request $request, CertificateTemplate $certificateTemplate): View
     {
         $this->authorize('view', $certificateTemplate);
 
+        $validated = $request->validate([
+            'college_id'    => ['nullable', 'integer', 'exists:colleges,id'],
+            'department_id' => ['nullable', 'integer', 'exists:departments,id'],
+        ]);
+
+        $collegeId = isset($validated['college_id']) ? (int) $validated['college_id'] : null;
+        $departmentId = isset($validated['department_id']) ? (int) $validated['department_id'] : null;
+
         $staffRows = app(\App\Services\Reporting\EvaluationReportService::class)
-            ->staffProgressSummary($certificateTemplate->period)
-            ->filter(fn (array $row) => (int) $row['completed'] > 0);
+            ->staffProgressSummary($certificateTemplate->period, $collegeId)
+            ->filter(fn (array $row) => (int) $row['completed'] > 0)
+            ->when($departmentId, fn ($rows) => $rows->filter(
+                fn (array $row) => (int) $row['staff']->department_id === $departmentId,
+            ))
+            ->values();
 
         return view('certificates.templates.staff-picker', [
-            'template'  => $certificateTemplate,
-            'staffRows' => $staffRows,
+            'template'    => $certificateTemplate,
+            'staffRows'   => $staffRows,
+            'colleges'    => College::where('is_active', true)->orderBy('name_en')->get(),
+            'departments' => Department::where('is_active', true)->with('college')->orderBy('name_en')->get(),
         ]);
     }
 }
